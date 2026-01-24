@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Boss Tracker - Cabal Online Ultimate Combo (SEA)</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -166,10 +165,19 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 0 10px rgba(88,166,255,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+
       position: fixed;
       right: 20px;
       bottom: 20px;
       z-index: 999;
+    }
+
+    body.light #themeToggle {
+      background: #003366;
+      color: white;
     }
 
     #logButton {
@@ -180,10 +188,18 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,152,0,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+
       position: fixed;
       right: 20px;
       bottom: 60px;
       z-index: 999;
+    }
+
+    body.light #logButton {
+      background: #cc7a00;
     }
 
     #columnSelector {
@@ -198,7 +214,6 @@
       cursor: pointer;
     }
 
-    /* LOGIN / LOGOUT BUTTONS */
     #loginBtn, #logoutBtn {
       position: fixed;
       top: 20px;
@@ -239,7 +254,7 @@
 <div id="columnSelector"></div>
 
 <script>
-/* Firebase Config (giữ nguyên bản index_bug) */
+/* Firebase Config (giữ nguyên index_bug) */
 const firebaseConfig = {
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   authDomain: "boss-tracker-v2.firebaseapp.com",
@@ -270,6 +285,7 @@ loginBtn.onclick = () => location.href = "login.html";
 logoutBtn.onclick = () => auth.signOut().then(() => location.href = "login.html");
 
 /* THEME */
+const themeToggle = document.getElementById("themeToggle");
 function applyTheme(mode) {
   if (mode === "light") {
     document.body.classList.add("light");
@@ -280,7 +296,6 @@ function applyTheme(mode) {
   }
 }
 applyTheme(localStorage.getItem("themeMode") || "dark");
-
 themeToggle.onclick = () => {
   const newTheme = document.body.classList.contains("light") ? "dark" : "light";
   applyTheme(newTheme);
@@ -288,11 +303,14 @@ themeToggle.onclick = () => {
 };
 
 /* LOG BUTTON */
+const logButton = document.getElementById("logButton");
 logButton.onclick = () => location.href = "log.html";
 
 /* COLUMN SELECTOR */
 const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
 const columnSelector = document.getElementById("columnSelector");
+const table = document.getElementById("bossTable");
+const notifications = document.getElementById("notifications");
 
 bosses.forEach((boss, index) => {
   columnSelector.innerHTML += `
@@ -303,16 +321,14 @@ bosses.forEach((boss, index) => {
   `;
 });
 
-/* RESTORE SAVED COLUMN VISIBILITY */
-const saved = JSON.parse(localStorage.getItem("columnVisibility") || "{}");
+const savedCols = JSON.parse(localStorage.getItem("columnVisibility") || "{}");
 document.querySelectorAll(".colToggle").forEach(cb => {
   const col = cb.dataset.col;
-  if (saved[col] !== undefined) cb.checked = saved[col];
+  if (savedCols[col] !== undefined) cb.checked = savedCols[col];
 });
 
-/* APPLY COLUMN VISIBILITY */
 function toggleColumn(colIndex, show) {
-  const rows = bossTable.rows;
+  const rows = table.rows;
   for (let r = 0; r < rows.length; r++) {
     const cell = rows[r].cells[colIndex];
     if (cell) cell.style.display = show ? "" : "none";
@@ -333,15 +349,13 @@ document.addEventListener("change", e => {
 });
 
 /* BUILD TABLE */
-const table = document.getElementById("bossTable");
-
-let header = "<tr><th>Channel</th>";
+let header = "<tr><th class='channel-col'>Channel</th>";
 bosses.forEach(b => header += `<th>${b}</th>`);
 header += "</tr>";
 table.innerHTML = header;
 
 for (let ch = 1; ch <= 30; ch++) {
-  let row = `<tr><td>${ch}</td>`;
+  let row = `<tr><td class="channel-col">${ch}</td>`;
   bosses.forEach(boss => {
     const id = `${ch}_${boss}`;
     row += `<td><input type="checkbox" id="${id}"><div class="timer" id="t_${id}">--</div></td>`;
@@ -350,9 +364,30 @@ for (let ch = 1; ch <= 30; ch++) {
   table.insertAdjacentHTML("beforeend", row);
 }
 
-/* APPLY SAVED COLUMN VISIBILITY */
 document.querySelectorAll(".colToggle").forEach(cb => {
   toggleColumn(parseInt(cb.dataset.col), cb.checked);
+});
+
+/* HIGHLIGHT ROW/COL */
+table.addEventListener("mousemove", function(e) {
+  const cell = e.target.closest("td,th");
+  if (!cell) return;
+
+  [...table.rows].forEach(r => r.classList.remove("highlight-row"));
+  [...table.querySelectorAll("td,th")].forEach(c => c.classList.remove("highlight-col"));
+
+  const row = cell.parentElement;
+  const colIndex = cell.cellIndex;
+
+  row.classList.add("highlight-row");
+  [...table.rows].forEach(r => {
+    if (r.cells[colIndex]) r.cells[colIndex].classList.add("highlight-col");
+  });
+});
+
+table.addEventListener("mouseleave", function() {
+  [...table.rows].forEach(r => r.classList.remove("highlight-row"));
+  [...table.querySelectorAll("td,th")].forEach(c => c.classList.remove("highlight-col"));
 });
 
 /* TIMER + LOGIC */
@@ -360,7 +395,6 @@ let timersData = {};
 
 bosses.forEach(boss => {
   for (let ch = 1; ch <= 30; ch++) {
-
     const id = `${ch}_${boss}`;
     const checkbox = document.getElementById(id);
     const timerCell = document.getElementById("t_" + id);
@@ -383,7 +417,7 @@ bosses.forEach(boss => {
         db.ref("timers/" + id).remove();
         if (timerCell.intervalId) clearInterval(timerCell.intervalId);
         timerCell.textContent = "--";
-        timerCell.className = "timer"; /* RESET MÀU */
+        timerCell.className = "timer";
 
         db.ref("logs").push({
           id: id,
@@ -411,22 +445,21 @@ bosses.forEach(boss => {
       e.preventDefault();
 
       const input = prompt("Nhập số PHÚT muốn đếm ngược:");
-      if (!input) return;
+      if (input === null) return;
 
-      const minutes = parseInt(input);
-      if (isNaN(minutes) || minutes <= 0) {
+      const minutesInput = parseInt(input);
+      if (isNaN(minutesInput) || minutesInput <= 0) {
         alert("Vui lòng nhập số nguyên dương!");
         return;
       }
 
       const totalSeconds = 240 * 60;
-      const remainSeconds = minutes * 60;
+      const remainSeconds = minutesInput * 60;
       const newStart = Date.now() - (totalSeconds - remainSeconds) * 1000;
 
       db.ref("timers/" + id).set({ checked: true, startTime: newStart });
       checkbox.checked = true;
     });
-
   }
 });
 
@@ -461,52 +494,63 @@ db.ref("timers").on("value", snapshot => {
         if (remain <= 0) {
           timerCell.textContent = "_SoS_";
           timerCell.className = "timer red";
-          try { alertSound.play(); } catch(e){}
+          try { document.getElementById("alertSound").play(); } catch(e){}
           clearInterval(timerCell.intervalId);
           return;
         }
 
-        const mm = String(Math.floor(remain / 60)).padStart(2, '0');
-        const ss = String(remain % 60).padStart(2, '0');
+        const mm = String(Math.floor(remain / 60)).padStart(2,'0');
+        const ss = String(remain % 60).padStart(2,'0');
         timerCell.textContent = `${mm}:${ss}`;
 
         timerCell.className = "timer";
-        if (remain >= 235 * 60) timerCell.classList.add("blue");
-        else if (remain > 5 * 60) timerCell.classList.add("green");
-        else if (remain > 3 * 60) timerCell.classList.add("yellow");
+        if (remain >= 235*60) timerCell.classList.add("blue");
+        else if (remain > 5*60) timerCell.classList.add("green");
+        else if (remain > 3*60) timerCell.classList.add("yellow");
         else timerCell.classList.add("red");
 
       }, 1000);
     } else {
       timerCell.textContent = "--";
-      timerCell.className = "timer"; /* RESET MÀU */
+      timerCell.className = "timer";
     }
   });
 });
 
 /* NOTIFICATIONS */
 setInterval(() => {
-  let soon = [];
+  let soonRespawn = [];
 
   Object.keys(timersData).forEach(id => {
     const { checked, startTime } = timersData[id];
     if (!checked) return;
 
-    const remain = 240 * 60 - Math.floor((Date.now() - startTime) / 1000);
-    if (remain <= 0) return;
+    const remainNow = 240*60 - Math.floor((Date.now()-startTime)/1000);
+    if (remainNow <= 0) return;
 
-    const mm = String(Math.floor(remain / 60)).padStart(2, '0');
-    const ss = String(remain % 60).padStart(2, '0');
+    const mm = String(Math.floor(remainNow / 60)).padStart(2,'0');
+    const ss = String(remainNow % 60).padStart(2,'0');
     const [ch, boss] = id.split("_");
 
-    soon.push({ ch, boss, text: `${mm}:${ss}`, remain });
+    let color = remainNow >= 235*60 ? "blue"
+              : remainNow > 5*60 ? "green"
+              : remainNow > 3*60 ? "yellow"
+              : "red";
+
+    soonRespawn.push({ch, boss, text:`${mm}:${ss}`, remain: remainNow, color});
   });
 
-  soon.sort((a, b) => a.remain - b.remain);
+  soonRespawn.sort((a,b) => a.remain - b.remain);
 
-  const box = document.getElementById("notifications");
-  box.innerHTML = "";
-
-  soon.slice(0, 5).forEach(item => {
+  notifications.innerHTML = "";
+  soonRespawn.slice(0,5).forEach(item => {
     const div = document.createElement("div");
-    div.textContent = `Kênh ${item.ch} – ${
+    div.textContent = `Kênh ${item.ch} - Boss ${item.boss} - Còn ${item.text}`;
+    div.className = item.color;
+    notifications.appendChild(div);
+  });
+}, 1000);
+</script>
+
+</body>
+</html>
