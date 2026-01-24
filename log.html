@@ -4,14 +4,6 @@
   <meta charset="UTF-8">
   <title>Lịch sử thao tác – Boss Tracker</title>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <!-- XLSX for Excel export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -27,20 +19,6 @@
       font-size: 28px;
       margin-bottom: 20px;
     }
-
-    /* LOGIN / LOGOUT BUTTONS */
-    #loginBtn, #logoutBtn {
-      position: fixed;
-      top: 20px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 999;
-    }
-    #loginBtn { right: 100px; background: #58a6ff; color: white; }
-    #logoutBtn { right: 20px; background: #dc3545; color: white; display: none; }
 
     #filters {
       text-align: center;
@@ -82,8 +60,15 @@
       background: rgba(255,255,255,0.05);
     }
 
-    .check { color: #00ff88; font-weight: bold; }
-    .uncheck { color: #ff4444; font-weight: bold; }
+    .check {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    .uncheck {
+      color: #ff4444;
+      font-weight: bold;
+    }
 
     /* Pagination */
     #pagination {
@@ -144,17 +129,19 @@
       z-index: 999;
     }
   </style>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- XLSX for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
 
-  <!-- LOGIN / LOGOUT BUTTONS -->
-  <button id="loginBtn">Login</button>
-  <button id="logoutBtn">Logout</button>
-
   <h2>Lịch sử thao tác Checkbox</h2>
 
-  <!-- FILTERS -->
+  <!-- BỘ LỌC -->
   <div id="filters">
     <select id="filterChannel">
       <option value="">-- Lọc theo kênh --</option>
@@ -173,36 +160,34 @@
     <input type="date" id="filterDate">
   </div>
 
-  <!-- TABLE -->
+  <!-- BẢNG LOG -->
   <table id="logTable">
     <tr>
       <th>Thời gian</th>
       <th>Kênh</th>
       <th>Boss</th>
       <th>Hành động</th>
-      <th>Người dùng</th>
     </tr>
   </table>
 
-  <!-- PAGINATION -->
+  <!-- PHÂN TRANG -->
   <div id="pagination">
     <button id="prevPage">Trang trước</button>
     <span id="pageInfo">Trang 1</span>
     <button id="nextPage">Trang sau</button>
   </div>
 
-  <!-- ACTION BUTTONS -->
+  <!-- ACTION BUTTONS BOTTOM-LEFT -->
   <div id="actions">
     <button id="exportExcel">Xuất Excel</button>
     <button id="clearLogs">Xóa log cũ hơn 5 tiếng</button>
   </div>
 
-  <!-- BACK BUTTON -->
+  <!-- BACK BUTTON BOTTOM-RIGHT -->
   <button id="backButton">Quay lại trang chính</button>
 
-<script>
-/* Firebase Config */
-const firebaseConfig = {
+  <script>
+    const firebaseConfig = {
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   authDomain: "boss-tracker-v2.firebaseapp.com",
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -211,225 +196,205 @@ const firebaseConfig = {
   messagingSenderId: "765872513495",
   appId: "1:765872513495:web:11f900233496c675932b92"
 };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+    const logTable = document.getElementById("logTable");
+    const filterChannel = document.getElementById("filterChannel");
+    const filterBoss = document.getElementById("filterBoss");
+    const filterAction = document.getElementById("filterAction");
+    const filterDate = document.getElementById("filterDate");
 
-/* LOGIN / LOGOUT HANDLING */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "block";
-  } else {
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
+    let allLogs = [];
+    let filteredLogs = [];
 
-    if (!location.href.includes("login.html")) {
-      location.href = "login.html";
-    }
-  }
-});
+    let currentPage = 1;
+    const rowsPerPage = 20;
 
-loginBtn.onclick = () => location.href = "login.html";
-logoutBtn.onclick = () => auth.signOut().then(() => location.href = "login.html");
+    db.ref("logs").orderByChild("time").on("value", snapshot => {
+      allLogs = [];
 
-/* BACK BUTTON */
-document.getElementById("backButton").onclick = () => location.href = "index.html";
+      snapshot.forEach(item => {
+        const log = item.val();
+        if (!log || !log.id || !log.time) return;
+        allLogs.push(log);
+      });
 
-/* LOGIC */
-const logTable = document.getElementById("logTable");
-const filterChannel = document.getElementById("filterChannel");
-const filterBoss = document.getElementById("filterBoss");
-const filterAction = document.getElementById("filterAction");
-const filterDate = document.getElementById("filterDate");
-
-let allLogs = [];
-let filteredLogs = [];
-let currentPage = 1;
-const rowsPerPage = 20;
-
-/* LOAD LOGS */
-db.ref("logs").orderByChild("time").on("value", snapshot => {
-  allLogs = [];
-
-  snapshot.forEach(item => {
-    const log = item.val();
-    if (!log || !log.id || !log.time) return;
-    allLogs.push(log);
-  });
-
-  applyFilters();
-});
-
-/* FILTERING */
-function applyFilters() {
-  filteredLogs = allLogs.filter(log => {
-    const parts = log.id.split("_");
-    if (parts.length < 2) return false;
-
-    const ch = parts[0];
-    const boss = parts.slice(1).join("_");
-
-    if (filterChannel.value && filterChannel.value !== ch) return false;
-    if (filterBoss.value && filterBoss.value !== boss) return false;
-    if (filterAction.value && filterAction.value !== log.action) return false;
-
-    if (filterDate.value) {
-      const d = new Date(log.time);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
-    }
-
-    return true;
-  });
-
-  currentPage = 1;
-  renderPagination();
-  renderLogs();
-  fillFilterOptions();
-}
-
-/* FILL FILTER OPTIONS */
-function fillFilterOptions() {
-  const channels = new Set();
-  const bosses = new Set();
-
-  allLogs.forEach(log => {
-    const parts = log.id.split("_");
-    if (parts.length < 2) return;
-    channels.add(parts[0]);
-    bosses.add(parts.slice(1).join("_"));
-  });
-
-  filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
-  channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
-
-  filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
-  bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
-}
-
-/* RENDER LOGS */
-function renderLogs() {
-  logTable.innerHTML = `
-    <tr>
-      <th>Thời gian</th>
-      <th>Kênh</th>
-      <th>Boss</th>
-      <th>Hành động</th>
-      <th>Người dùng</th>
-    </tr>
-  `;
-
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-
-  filteredLogs.slice(start, end).forEach(log => {
-    const parts = log.id.split("_");
-    const ch = parts[0];
-    const boss = parts.slice(1).join("_");
-
-    const time = new Date(log.time);
-    const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
-
-    logTable.insertAdjacentHTML("beforeend", `
-      <tr>
-        <td>${timeStr}</td>
-        <td>${ch}</td>
-        <td>${boss}</td>
-        <td class="${log.action}">
-          ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
-        </td>
-        <td>${log.user || "unknown"}</td>
-      </tr>
-    `);
-  });
-}
-
-/* PAGINATION */
-function renderPagination() {
-  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-  document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
-}
-
-document.getElementById("prevPage").onclick = () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderPagination();
-    renderLogs();
-  }
-};
-
-document.getElementById("nextPage").onclick = () => {
-  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderPagination();
-    renderLogs();
-  }
-};
-
-/* EXPORT EXCEL */
-document.getElementById("exportExcel").onclick = () => {
-  if (filteredLogs.length === 0) {
-    alert("Không có dữ liệu để xuất!");
-    return;
-  }
-
-  const data = filteredLogs.map(log => {
-    const parts = log.id.split("_");
-    const ch = parts[0];
-    const boss = parts.slice(1).join("_");
-    const time = new Date(log.time);
-
-    return {
-      "Thời gian": time.toLocaleString("vi-VN"),
-      "Kênh": ch,
-      "Boss": boss,
-      "Hành động": log.action === "check" ? "Bật" : "Tắt",
-      "Người dùng": log.user || "unknown"
-    };
-  });
-
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
-
-  XLSX.writeFile(workbook, "lich_su_log.xlsx");
-};
-
-/* CLEAR LOGS OLDER THAN 5 HOURS */
-document.getElementById("clearLogs").onclick = () => {
-  if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
-
-  const now = Date.now();
-  const fiveHours = 5 * 60 * 60 * 1000;
-
-  db.ref("logs").once("value", snapshot => {
-    const logs = snapshot.val() || {};
-
-    Object.keys(logs).forEach(key => {
-      const log = logs[key];
-      if (!log.time) return;
-
-      if (now - log.time > fiveHours) {
-        db.ref("logs/" + key).remove();
-      }
+      applyFilters();
     });
 
-    alert("Đã xóa log cũ hơn 5 tiếng!");
-  });
-};
+    function applyFilters() {
+      filteredLogs = allLogs.filter(log => {
+        const parts = log.id.split("_");
+        if (parts.length < 2) return false;
 
-/* FILTER EVENTS */
-filterChannel.onchange =
-filterBoss.onchange =
-filterAction.onchange =
-filterDate.onchange = applyFilters;
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
 
-</script>
+        if (filterChannel.value && filterChannel.value !== ch) return false;
+        if (filterBoss.value && filterBoss.value !== boss) return false;
+        if (filterAction.value && filterAction.value !== log.action) return false;
+
+        if (filterDate.value) {
+          const d = new Date(log.time);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
+        }
+
+        return true;
+      });
+
+      currentPage = 1;
+      renderPagination();
+      renderLogs();
+      fillFilterOptions();
+    }
+
+    function fillFilterOptions() {
+      const channels = new Set();
+      const bosses = new Set();
+
+      allLogs.forEach(log => {
+        const parts = log.id.split("_");
+        if (parts.length < 2) return;
+        channels.add(parts[0]);
+        bosses.add(parts.slice(1).join("_"));
+      });
+
+      filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
+      channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
+
+      filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
+      bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
+    }
+
+    function renderLogs() {
+      logTable.innerHTML = `
+        <tr>
+          <th>Thời gian</th>
+          <th>Kênh</th>
+          <th>Boss</th>
+          <th>Hành động</th>
+        </tr>
+      `;
+
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+
+      filteredLogs.slice(start, end).forEach(log => {
+        const parts = log.id.split("_");
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
+
+        const time = new Date(log.time);
+        const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
+
+        logTable.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>${timeStr}</td>
+            <td>${ch}</td>
+            <td>${boss}</td>
+            <td class="${log.action}">
+              ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
+            </td>
+          </tr>
+        `);
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+      document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
+    }
+
+    document.getElementById("prevPage").onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPagination();
+        renderLogs();
+      }
+    };
+
+    document.getElementById("nextPage").onclick = () => {
+      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPagination();
+        renderLogs();
+      }
+    };
+
+    filterChannel.onchange =
+    filterBoss.onchange =
+    filterAction.onchange =
+    filterDate.onchange = applyFilters;
+
+    /* EXPORT EXCEL */
+    document.getElementById("exportExcel").addEventListener("click", () => {
+      if (filteredLogs.length === 0) {
+        alert("Không có dữ liệu để xuất!");
+        return;
+      }
+
+      const data = filteredLogs.map(log => {
+        const parts = log.id.split("_");
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
+        const time = new Date(log.time);
+
+        return {
+          "Thời gian": time.toLocaleString("vi-VN"),
+          "Kênh": ch,
+          "Boss": boss,
+          "Hành động": log.action === "check" ? "Bật" : "Tắt"
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
+
+      XLSX.writeFile(workbook, "lich_su_log.xlsx");
+    });
+
+    /* CLEAR LOGS – chỉ xóa log cũ hơn 5 tiếng */
+    document.getElementById("clearLogs").addEventListener("click", () => {
+      if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
+
+      const now = Date.now();
+      const fiveHours = 5 * 60 * 60 * 1000;
+
+      db.ref("logs").once("value", snapshot => {
+        const logs = snapshot.val() || {};
+
+        Object.keys(logs).forEach(key => {
+          const log = logs[key];
+          if (!log.time) return;
+
+          if (now - log.time > fiveHours) {
+            db.ref("logs/" + key).remove();
+          }
+        });
+
+        alert("Đã xóa log cũ hơn 5 tiếng!");
+
+        allLogs = allLogs.filter(l => now - l.time <= fiveHours);
+        filteredLogs = filteredLogs.filter(l => now - l.time <= fiveHours);
+        renderLogs();
+        renderPagination();
+      });
+    });
+
+    /* BACK BUTTON */
+    document.getElementById("backButton").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  </script>
 
 </body>
 </html>
+
+
+
