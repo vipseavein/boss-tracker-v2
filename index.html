@@ -14,6 +14,28 @@
       transition: 0.3s;
     }
 
+    /* LIGHT MODE FIX */
+    body.light {
+      background: #f2f2f2;
+      color: #222;
+    }
+    body.light table {
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+    body.light th {
+      background: #d0e4ff;
+      color: #003366;
+    }
+    body.light td {
+      color: #222;
+      border-color: #aac4e6;
+    }
+    body.light #notifications div {
+      color: black;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
     h2 {
       text-align: center;
       color: #58a6ff;
@@ -107,13 +129,6 @@
       position: relative;
     }
 
-    .highlight-row td {
-      background-color: rgba(255, 255, 255, 0.08) !important;
-    }
-    .highlight-col {
-      background-color: rgba(255, 255, 255, 0.12) !important;
-    }
-
     /* LOGIN / LOGOUT BUTTONS */
     #loginBtn, #logoutBtn {
       position: fixed;
@@ -136,10 +151,6 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(88,166,255,0.4);
-      transition: 0.3s;
-      font-size: 13px;
-
       position: fixed;
       right: 20px;
       bottom: 20px;
@@ -154,10 +165,6 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(255,152,0,0.4);
-      transition: 0.3s;
-      font-size: 13px;
-
       position: fixed;
       right: 20px;
       bottom: 60px;
@@ -184,7 +191,6 @@
 
 <body>
 
-<!-- LOGIN / LOGOUT BUTTONS -->
 <button id="loginBtn">Login</button>
 <button id="logoutBtn">Logout</button>
 
@@ -219,7 +225,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-/* LOGIN / LOGOUT HANDLING */
+/* LOGIN / LOGOUT */
 auth.onAuthStateChanged(user => {
   if (user) {
     loginBtn.style.display = "none";
@@ -227,10 +233,7 @@ auth.onAuthStateChanged(user => {
   } else {
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
-
-    if (!location.href.includes("login.html")) {
-      location.href = "login.html";
-    }
+    if (!location.href.includes("login.html")) location.href = "login.html";
   }
 });
 
@@ -238,7 +241,6 @@ loginBtn.onclick = () => location.href = "login.html";
 logoutBtn.onclick = () => auth.signOut().then(() => location.href = "login.html");
 
 /* THEME */
-const themeToggle = document.getElementById("themeToggle");
 function applyTheme(mode) {
   if (mode === "light") {
     document.body.classList.add("light");
@@ -249,6 +251,7 @@ function applyTheme(mode) {
   }
 }
 applyTheme(localStorage.getItem("themeMode") || "dark");
+
 themeToggle.onclick = () => {
   const newTheme = document.body.classList.contains("light") ? "dark" : "light";
   applyTheme(newTheme);
@@ -256,10 +259,51 @@ themeToggle.onclick = () => {
 };
 
 /* LOG BUTTON */
-document.getElementById("logButton").onclick = () => location.href = "log.html";
+logButton.onclick = () => location.href = "log.html";
 
-/* BOSS TABLE */
+/* COLUMN SELECTOR — FIXED */
 const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
+const columnSelector = document.getElementById("columnSelector");
+
+bosses.forEach((boss, index) => {
+  columnSelector.innerHTML += `
+    <label>
+      <input type="checkbox" class="colToggle" data-col="${index+1}" checked>
+      ${boss}
+    </label>
+  `;
+});
+
+/* RESTORE SAVED COLUMN VISIBILITY */
+const saved = JSON.parse(localStorage.getItem("columnVisibility") || "{}");
+document.querySelectorAll(".colToggle").forEach(cb => {
+  const col = cb.dataset.col;
+  if (saved[col] !== undefined) cb.checked = saved[col];
+});
+
+/* APPLY COLUMN VISIBILITY */
+function toggleColumn(colIndex, show) {
+  const rows = bossTable.rows;
+  for (let r = 0; r < rows.length; r++) {
+    const cell = rows[r].cells[colIndex];
+    if (cell) cell.style.display = show ? "" : "none";
+  }
+}
+
+document.addEventListener("change", e => {
+  if (e.target.classList.contains("colToggle")) {
+    const col = parseInt(e.target.dataset.col);
+    toggleColumn(col, e.target.checked);
+
+    const save = {};
+    document.querySelectorAll(".colToggle").forEach(cb => {
+      save[cb.dataset.col] = cb.checked;
+    });
+    localStorage.setItem("columnVisibility", JSON.stringify(save));
+  }
+});
+
+/* BUILD TABLE */
 const table = document.getElementById("bossTable");
 
 let header = "<tr><th>Channel</th>";
@@ -277,6 +321,11 @@ for (let ch = 1; ch <= 30; ch++) {
   table.insertAdjacentHTML("beforeend", row);
 }
 
+/* APPLY SAVED COLUMN VISIBILITY */
+document.querySelectorAll(".colToggle").forEach(cb => {
+  toggleColumn(parseInt(cb.dataset.col), cb.checked);
+});
+
 /* TIMER + LOGIC */
 let timersData = {};
 
@@ -287,7 +336,6 @@ bosses.forEach(boss => {
     const checkbox = document.getElementById(id);
     const timerCell = document.getElementById("t_" + id);
 
-    /* CHECK / UNCHECK */
     checkbox.addEventListener("change", e => {
       const user = auth.currentUser;
       const email = user ? user.email.split("@")[0] : "unknown";
@@ -316,7 +364,6 @@ bosses.forEach(boss => {
       }
     });
 
-    /* RIGHT CLICK → YELLOW MARK */
     checkbox.addEventListener("contextmenu", e => {
       e.preventDefault();
       const colorRef = db.ref("colors/" + id);
@@ -330,7 +377,6 @@ bosses.forEach(boss => {
       }
     });
 
-    /* RIGHT CLICK TIMER → CUSTOM MINUTES */
     timerCell.addEventListener("contextmenu", e => {
       e.preventDefault();
 
@@ -408,7 +454,7 @@ db.ref("timers").on("value", snapshot => {
   });
 });
 
-/* NOTIFICATIONS */
+/* NOTIFICATIONS — FIXED */
 setInterval(() => {
   let soon = [];
 
