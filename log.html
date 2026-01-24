@@ -4,23 +4,16 @@
   <meta charset="UTF-8">
   <title>Lịch sử thao tác – Boss Tracker</title>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- XLSX for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <style>
-    body 
-    /* NUT LOGIN - LOGOUT */
-    <button id="loginBtn" style="
-  position: fixed; top: 20px; right: 100px;
-  padding: 6px 12px; background:#58a6ff; border:none;
-  border-radius:6px; color:white; font-weight:bold; cursor:pointer;
-  z-index:999;">Login</button>
-
-<button id="logoutBtn" style="
-  position: fixed; top: 20px; right: 20px;
-  padding: 6px 12px; background:#dc3545; border:none;
-  border-radius:6px; color:white; font-weight:bold; cursor:pointer;
-  z-index:999; display:none;">Logout</button>
-
-    
-    {
+    body {
       font-family: Arial, sans-serif;
       background: #0d1117;
       color: #e6edf3;
@@ -34,6 +27,20 @@
       font-size: 28px;
       margin-bottom: 20px;
     }
+
+    /* LOGIN / LOGOUT BUTTONS */
+    #loginBtn, #logoutBtn {
+      position: fixed;
+      top: 20px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+    #loginBtn { right: 100px; background: #58a6ff; color: white; }
+    #logoutBtn { right: 20px; background: #dc3545; color: white; display: none; }
 
     #filters {
       text-align: center;
@@ -75,15 +82,8 @@
       background: rgba(255,255,255,0.05);
     }
 
-    .check {
-      color: #00ff88;
-      font-weight: bold;
-    }
-
-    .uncheck {
-      color: #ff4444;
-      font-weight: bold;
-    }
+    .check { color: #00ff88; font-weight: bold; }
+    .uncheck { color: #ff4444; font-weight: bold; }
 
     /* Pagination */
     #pagination {
@@ -144,19 +144,17 @@
       z-index: 999;
     }
   </style>
-
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <!-- XLSX for Excel export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
 
+  <!-- LOGIN / LOGOUT BUTTONS -->
+  <button id="loginBtn">Login</button>
+  <button id="logoutBtn">Logout</button>
+
   <h2>Lịch sử thao tác Checkbox</h2>
 
-  <!-- BỘ LỌC -->
+  <!-- FILTERS -->
   <div id="filters">
     <select id="filterChannel">
       <option value="">-- Lọc theo kênh --</option>
@@ -175,34 +173,36 @@
     <input type="date" id="filterDate">
   </div>
 
-  <!-- BẢNG LOG -->
+  <!-- TABLE -->
   <table id="logTable">
     <tr>
       <th>Thời gian</th>
       <th>Kênh</th>
       <th>Boss</th>
       <th>Hành động</th>
+      <th>Người dùng</th>
     </tr>
   </table>
 
-  <!-- PHÂN TRANG -->
+  <!-- PAGINATION -->
   <div id="pagination">
     <button id="prevPage">Trang trước</button>
     <span id="pageInfo">Trang 1</span>
     <button id="nextPage">Trang sau</button>
   </div>
 
-  <!-- ACTION BUTTONS BOTTOM-LEFT -->
+  <!-- ACTION BUTTONS -->
   <div id="actions">
     <button id="exportExcel">Xuất Excel</button>
     <button id="clearLogs">Xóa log cũ hơn 5 tiếng</button>
   </div>
 
-  <!-- BACK BUTTON BOTTOM-RIGHT -->
+  <!-- BACK BUTTON -->
   <button id="backButton">Quay lại trang chính</button>
 
-  <script>
-    const firebaseConfig = {
+<script>
+/* Firebase Config */
+const firebaseConfig = {
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   authDomain: "boss-tracker-v2.firebaseapp.com",
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -211,232 +211,225 @@
   messagingSenderId: "765872513495",
   appId: "1:765872513495:web:11f900233496c675932b92"
 };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    const logTable = document.getElementById("logTable");
-    const filterChannel = document.getElementById("filterChannel");
-    const filterBoss = document.getElementById("filterBoss");
-    const filterAction = document.getElementById("filterAction");
-    const filterDate = document.getElementById("filterDate");
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-    let allLogs = [];
-    let filteredLogs = [];
-
-    let currentPage = 1;
-    const rowsPerPage = 20;
-
-    db.ref("logs").orderByChild("time").on("value", snapshot => {
-      allLogs = [];
-
-      snapshot.forEach(item => {
-        const log = item.val();
-        if (!log || !log.id || !log.time) return;
-        allLogs.push(log);
-      });
-
-      applyFilters();
-    });
-
-    function applyFilters() {
-      filteredLogs = allLogs.filter(log => {
-        const parts = log.id.split("_");
-        if (parts.length < 2) return false;
-
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
-
-        if (filterChannel.value && filterChannel.value !== ch) return false;
-        if (filterBoss.value && filterBoss.value !== boss) return false;
-        if (filterAction.value && filterAction.value !== log.action) return false;
-
-        if (filterDate.value) {
-          const d = new Date(log.time);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
-        }
-
-        return true;
-      });
-
-      currentPage = 1;
-      renderPagination();
-      renderLogs();
-      fillFilterOptions();
-    }
-
-    function fillFilterOptions() {
-      const channels = new Set();
-      const bosses = new Set();
-
-      allLogs.forEach(log => {
-        const parts = log.id.split("_");
-        if (parts.length < 2) return;
-        channels.add(parts[0]);
-        bosses.add(parts.slice(1).join("_"));
-      });
-
-      filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
-      channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
-
-      filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
-      bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
-    }
-
-    function renderLogs() {
-      logTable.innerHTML = `
-        <tr>
-          <th>Thời gian</th>
-          <th>Kênh</th>
-          <th>Boss</th>
-          <th>Hành động</th>
-        </tr>
-      `;
-
-      const start = (currentPage - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-
-      filteredLogs.slice(start, end).forEach(log => {
-        const parts = log.id.split("_");
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
-
-        const time = new Date(log.time);
-        const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
-
-        logTable.insertAdjacentHTML("beforeend", `
-          <tr>
-            <td>${timeStr}</td>
-            <td>${ch}</td>
-            <td>${boss}</td>
-            <td class="${log.action}">
-              ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
-            </td>
-          </tr>
-        `);
-      });
-    }
-
-    function renderPagination() {
-      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-      document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
-    }
-
-    document.getElementById("prevPage").onclick = () => {
-      if (currentPage > 1) {
-        currentPage--;
-        renderPagination();
-        renderLogs();
-      }
-    };
-
-    document.getElementById("nextPage").onclick = () => {
-      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-      if (currentPage < totalPages) {
-        currentPage++;
-        renderPagination();
-        renderLogs();
-      }
-    };
-
-    filterChannel.onchange =
-    filterBoss.onchange =
-    filterAction.onchange =
-    filterDate.onchange = applyFilters;
-
-    /* EXPORT EXCEL */
-    document.getElementById("exportExcel").addEventListener("click", () => {
-      if (filteredLogs.length === 0) {
-        alert("Không có dữ liệu để xuất!");
-        return;
-      }
-
-      const data = filteredLogs.map(log => {
-        const parts = log.id.split("_");
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
-        const time = new Date(log.time);
-
-        return {
-          "Thời gian": time.toLocaleString("vi-VN"),
-          "Kênh": ch,
-          "Boss": boss,
-          "Hành động": log.action === "check" ? "Bật" : "Tắt"
-        };
-      });
-
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
-
-      XLSX.writeFile(workbook, "lich_su_log.xlsx");
-    });
-
-    /* CLEAR LOGS – chỉ xóa log cũ hơn 5 tiếng */
-    document.getElementById("clearLogs").addEventListener("click", () => {
-      if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
-
-      const now = Date.now();
-      const fiveHours = 5 * 60 * 60 * 1000;
-
-      db.ref("logs").once("value", snapshot => {
-        const logs = snapshot.val() || {};
-
-        Object.keys(logs).forEach(key => {
-          const log = logs[key];
-          if (!log.time) return;
-
-          if (now - log.time > fiveHours) {
-            db.ref("logs/" + key).remove();
-          }
-        });
-
-        alert("Đã xóa log cũ hơn 5 tiếng!");
-
-        allLogs = allLogs.filter(l => now - l.time <= fiveHours);
-        filteredLogs = filteredLogs.filter(l => now - l.time <= fiveHours);
-        renderLogs();
-        renderPagination();
-      });
-    });
-
-    /* BACK BUTTON */
-    document.getElementById("backButton").addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
-/* XU LY LOGIN */
-    firebase.auth().onAuthStateChanged(user => {
+/* LOGIN / LOGOUT HANDLING */
+auth.onAuthStateChanged(user => {
   if (user) {
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
   } else {
-    document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("logoutBtn").style.display = "none";
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
 
-    // Chặn truy cập nếu chưa login
-    if (!window.location.href.includes("login.html")) {
-      window.location.href = "login.html";
+    if (!location.href.includes("login.html")) {
+      location.href = "login.html";
     }
   }
 });
 
-document.getElementById("loginBtn").onclick = () => {
-  window.location.href = "login.html";
+loginBtn.onclick = () => location.href = "login.html";
+logoutBtn.onclick = () => auth.signOut().then(() => location.href = "login.html");
+
+/* BACK BUTTON */
+document.getElementById("backButton").onclick = () => location.href = "index.html";
+
+/* LOGIC */
+const logTable = document.getElementById("logTable");
+const filterChannel = document.getElementById("filterChannel");
+const filterBoss = document.getElementById("filterBoss");
+const filterAction = document.getElementById("filterAction");
+const filterDate = document.getElementById("filterDate");
+
+let allLogs = [];
+let filteredLogs = [];
+let currentPage = 1;
+const rowsPerPage = 20;
+
+/* LOAD LOGS */
+db.ref("logs").orderByChild("time").on("value", snapshot => {
+  allLogs = [];
+
+  snapshot.forEach(item => {
+    const log = item.val();
+    if (!log || !log.id || !log.time) return;
+    allLogs.push(log);
+  });
+
+  applyFilters();
+});
+
+/* FILTERING */
+function applyFilters() {
+  filteredLogs = allLogs.filter(log => {
+    const parts = log.id.split("_");
+    if (parts.length < 2) return false;
+
+    const ch = parts[0];
+    const boss = parts.slice(1).join("_");
+
+    if (filterChannel.value && filterChannel.value !== ch) return false;
+    if (filterBoss.value && filterBoss.value !== boss) return false;
+    if (filterAction.value && filterAction.value !== log.action) return false;
+
+    if (filterDate.value) {
+      const d = new Date(log.time);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
+    }
+
+    return true;
+  });
+
+  currentPage = 1;
+  renderPagination();
+  renderLogs();
+  fillFilterOptions();
+}
+
+/* FILL FILTER OPTIONS */
+function fillFilterOptions() {
+  const channels = new Set();
+  const bosses = new Set();
+
+  allLogs.forEach(log => {
+    const parts = log.id.split("_");
+    if (parts.length < 2) return;
+    channels.add(parts[0]);
+    bosses.add(parts.slice(1).join("_"));
+  });
+
+  filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
+  channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
+
+  filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
+  bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
+}
+
+/* RENDER LOGS */
+function renderLogs() {
+  logTable.innerHTML = `
+    <tr>
+      <th>Thời gian</th>
+      <th>Kênh</th>
+      <th>Boss</th>
+      <th>Hành động</th>
+      <th>Người dùng</th>
+    </tr>
+  `;
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+
+  filteredLogs.slice(start, end).forEach(log => {
+    const parts = log.id.split("_");
+    const ch = parts[0];
+    const boss = parts.slice(1).join("_");
+
+    const time = new Date(log.time);
+    const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
+
+    logTable.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td>${timeStr}</td>
+        <td>${ch}</td>
+        <td>${boss}</td>
+        <td class="${log.action}">
+          ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
+        </td>
+        <td>${log.user || "unknown"}</td>
+      </tr>
+    `);
+  });
+}
+
+/* PAGINATION */
+function renderPagination() {
+  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+  document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
+}
+
+document.getElementById("prevPage").onclick = () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderPagination();
+    renderLogs();
+  }
 };
 
-document.getElementById("logoutBtn").onclick = () => {
-  firebase.auth().signOut().then(() => {
-    window.location.href = "login.html";
+document.getElementById("nextPage").onclick = () => {
+  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderPagination();
+    renderLogs();
+  }
+};
+
+/* EXPORT EXCEL */
+document.getElementById("exportExcel").onclick = () => {
+  if (filteredLogs.length === 0) {
+    alert("Không có dữ liệu để xuất!");
+    return;
+  }
+
+  const data = filteredLogs.map(log => {
+    const parts = log.id.split("_");
+    const ch = parts[0];
+    const boss = parts.slice(1).join("_");
+    const time = new Date(log.time);
+
+    return {
+      "Thời gian": time.toLocaleString("vi-VN"),
+      "Kênh": ch,
+      "Boss": boss,
+      "Hành động": log.action === "check" ? "Bật" : "Tắt",
+      "Người dùng": log.user || "unknown"
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
+
+  XLSX.writeFile(workbook, "lich_su_log.xlsx");
+};
+
+/* CLEAR LOGS OLDER THAN 5 HOURS */
+document.getElementById("clearLogs").onclick = () => {
+  if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
+
+  const now = Date.now();
+  const fiveHours = 5 * 60 * 60 * 1000;
+
+  db.ref("logs").once("value", snapshot => {
+    const logs = snapshot.val() || {};
+
+    Object.keys(logs).forEach(key => {
+      const log = logs[key];
+      if (!log.time) return;
+
+      if (now - log.time > fiveHours) {
+        db.ref("logs/" + key).remove();
+      }
+    });
+
+    alert("Đã xóa log cũ hơn 5 tiếng!");
   });
 };
-  
-  
-  </script>
+
+/* FILTER EVENTS */
+filterChannel.onchange =
+filterBoss.onchange =
+filterAction.onchange =
+filterDate.onchange = applyFilters;
+
+</script>
 
 </body>
 </html>
-
-
-
