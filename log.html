@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Lịch sử thao tác – Boss Tracker</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #58a6ff;
+      text-shadow: 0 0 10px #58a6ff;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    #filters {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    select, input[type="date"] {
+      padding: 6px 10px;
+      margin: 0 5px;
+      border-radius: 6px;
+      border: 1px solid #58a6ff;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(88,166,255,0.3);
+    }
+
+    th, td {
+      border: 1px solid rgba(88,166,255,0.2);
+      padding: 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th {
+      background: rgba(88,166,255,0.2);
+      color: #58a6ff;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .check {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    .uncheck {
+      color: #ff4444;
+      font-weight: bold;
+    }
+
+    #pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    #pagination button {
+      padding: 6px 12px;
+      margin: 0 5px;
+      background: #58a6ff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #pagination span {
+      margin: 0 10px;
+      font-size: 16px;
+      color: #58a6ff;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+
+<body>
+
+  <h2>Lịch sử thao tác Checkbox</h2>
+
+  <div id="filters">
+    <select id="filterChannel">
+      <option value="">-- Lọc theo kênh --</option>
+    </select>
+
+    <select id="filterBoss">
+      <option value="">-- Lọc theo boss --</option>
+    </select>
+
+    <select id="filterAction">
+      <option value="">-- Hành động --</option>
+      <option value="check">✔ Bật</option>
+      <option value="uncheck">✘ Tắt</option>
+    </select>
+
+    <input type="date" id="filterDate">
+  </div>
+
+  <table id="logTable">
+    <tr>
+      <th>Thời gian</th>
+      <th>Kênh</th>
+      <th>Boss</th>
+      <th>Hành động</th>
+      <th>Người dùng</th>
+    </tr>
+  </table>
+
+  <div id="pagination">
+    <button id="prevPage">Trang trước</button>
+    <span id="pageInfo">Trang 1</span>
+    <button id="nextPage">Trang sau</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXdf1nQabS_5tt2gpIxDxo2w14KVsyL8g",
+      authDomain: "boss-tracker-9e069.firebaseapp.com",
+      databaseURL: "https://boss-tracker-9e069-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "boss-tracker-9e069",
+      storageBucket: "boss-tracker-9e069.appspot.com",
+      messagingSenderId: "968667523286",
+      appId: "1:968667523286:web:a8c750376cfe9df7310177"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const logTable = document.getElementById("logTable");
+    const filterChannel = document.getElementById("filterChannel");
+    const filterBoss = document.getElementById("filterBoss");
+    const filterAction = document.getElementById("filterAction");
+    const filterDate = document.getElementById("filterDate");
+
+    let allLogs = [];
+    let filteredLogs = [];
+
+    let currentPage = 1;
+    const rowsPerPage = 20;
+
+    db.ref("logs").orderByChild("time").on("value", snapshot => {
+      allLogs = [];
+
+      snapshot.forEach(item => {
+        const log = item.val();
+        if (!log || !log.id || !log.time) return;
+        allLogs.push(log);
+      });
+
+      applyFilters();
+    });
+
+    function applyFilters() {
+      filteredLogs = allLogs.filter(log => {
+        const parts = log.id.split("_");
+        if (parts.length < 2) return false;
+
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
+
+        if (filterChannel.value && filterChannel.value !== ch) return false;
+        if (filterBoss.value && filterBoss.value !== boss) return false;
+        if (filterAction.value && filterAction.value !== log.action) return false;
+
+        if (filterDate.value) {
+          const d = new Date(log.time);
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
+        }
+
+        return true;
+      });
+
+      currentPage = 1;
+      renderPagination();
+      renderLogs();
+      fillFilterOptions();
+    }
+
+    function fillFilterOptions() {
+      const channels = new Set();
+      const bosses = new Set();
+
+      allLogs.forEach(log => {
+        const parts = log.id.split("_");
+        if (parts.length < 2) return;
+        channels.add(parts[0]);
+        bosses.add(parts.slice(1).join("_"));
+      });
+
+      filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
+      channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
+
+      filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
+      bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
+    }
+
+    function renderLogs() {
+      logTable.innerHTML = `
+        <tr>
+          <th>Thời gian</th>
+          <th>Kênh</th>
+          <th>Boss</th>
+          <th>Hành động</th>
+          <th>Người dùng</th>
+        </tr>
+      `;
+
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+
+      filteredLogs.slice(start, end).forEach(log => {
+        const parts = log.id.split("_");
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
+
+        const time = new Date(log.time);
+        const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
+
+        const user = log.user ? log.user : "unknown";
+
+        logTable.insertAdjacentHTML("beforeend", `
+          <tr>
+            <td>${timeStr}</td>
+            <td>${ch}</td>
+            <td>${boss}</td>
+            <td class="${log.action}">
+              ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
+            </td>
+            <td>${user}</td>
+          </tr>
+        `);
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+      document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
+    }
+
+    document.getElementById("prevPage").onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPagination();
+        renderLogs();
+      }
+    };
+
+    document.getElementById("nextPage").onclick = () => {
+      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPagination();
+        renderLogs();
+      }
+    };
+
+    filterChannel.onchange =
+    filterBoss.onchange =
+    filterAction.onchange =
+    filterDate.onchange = applyFilters;
+  </script>
+
+</body>
+</html>
