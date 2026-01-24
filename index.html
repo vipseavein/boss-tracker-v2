@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Boss Tracker - Cabal Online Ultimate Combo (SEA)</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -67,7 +68,6 @@
       vertical-align: middle;
     }
 
-    /* MÀU VÀNG KHI CHUỘT PHẢI */
     .right-clicked {
       outline: 3px solid #ffeb3b !important;
       box-shadow: 0 0 10px #ffeb3b;
@@ -114,49 +114,19 @@
       background-color: rgba(255, 255, 255, 0.12) !important;
     }
 
-    body.light {
-      background: #f2f2f2;
-      color: #222;
+    /* LOGIN / LOGOUT BUTTONS */
+    #loginBtn, #logoutBtn {
+      position: fixed;
+      top: 20px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
     }
-
-    body.light table {
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-    }
-
-    body.light th {
-      background: #d0e4ff;
-      color: #003366;
-      text-shadow: none;
-    }
-
-    body.light td {
-      color: #222;
-      border-color: #aac4e6;
-    }
-
-    body.light #bossTable tr:nth-child(odd) {
-      background-color: #f7fbff !important;
-    }
-    body.light #bossTable tr:nth-child(even) {
-      background-color: #eaf4ff !important;
-    }
-
-    body.light .timer {
-      text-shadow: none;
-    }
-
-    body.light #notifications div {
-      color: black;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-    }
-
-    body.light .highlight-row td {
-      background-color: rgba(0, 0, 0, 0.05) !important;
-    }
-    body.light .highlight-col {
-      background-color: rgba(0, 0, 0, 0.08) !important;
-    }
+    #loginBtn { right: 100px; background: #58a6ff; color: white; }
+    #logoutBtn { right: 20px; background: #dc3545; color: white; display: none; }
 
     #themeToggle {
       padding: 6px 12px;
@@ -174,11 +144,6 @@
       right: 20px;
       bottom: 20px;
       z-index: 999;
-    }
-
-    body.light #themeToggle {
-      background: #003366;
-      color: white;
     }
 
     #logButton {
@@ -199,10 +164,6 @@
       z-index: 999;
     }
 
-    body.light #logButton {
-      background: #cc7a00;
-    }
-
     #columnSelector {
       margin-top: 20px;
       padding: 10px;
@@ -217,54 +178,34 @@
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 
 <body>
 
-  <audio id="alertSound">
-    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-  </audio>
+<!-- LOGIN / LOGOUT BUTTONS -->
+<button id="loginBtn">Login</button>
+<button id="logoutBtn">Logout</button>
 
-  <h2>Boss Tracker - Cabal Ultimate Combo (SEA)</h2>
+<audio id="alertSound">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
-  <table id="bossTable"></table>
+<h2>Boss Tracker - Cabal Ultimate Combo (SEA)</h2>
 
-  <div id="notifications"></div>
+<table id="bossTable"></table>
 
-  <button id="themeToggle">Light Mode</button>
-  <button id="logButton">LOG</button>
+<div id="notifications"></div>
 
-  <div id="columnSelector"></div>
+<button id="themeToggle">Light Mode</button>
+<button id="logButton">LOG</button>
 
-  <script>
-    const themeToggle = document.getElementById("themeToggle");
+<div id="columnSelector"></div>
 
-    function applyTheme(mode) {
-      if (mode === "light") {
-        document.body.classList.add("light");
-        themeToggle.textContent = "Dark Mode";
-      } else {
-        document.body.classList.remove("light");
-        themeToggle.textContent = "Light Mode";
-      }
-    }
-
-    const savedTheme = localStorage.getItem("themeMode") || "dark";
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener("click", () => {
-      const newTheme = document.body.classList.contains("light") ? "dark" : "light";
-      applyTheme(newTheme);
-      localStorage.setItem("themeMode", newTheme);
-    });
-
-    document.getElementById("logButton").addEventListener("click", () => {
-      window.location.href = "log.html";
-    });
-
-    /* Firebase */
-   const firebaseConfig = {
+<script>
+/* Firebase Config */
+const firebaseConfig = {
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   authDomain: "boss-tracker-v2.firebaseapp.com",
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -273,257 +214,232 @@
   messagingSenderId: "765872513495",
   appId: "1:765872513495:web:11f900233496c675932b92"
 };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
-    const table = document.getElementById("bossTable");
-    const notifications = document.getElementById("notifications");
-    const columnSelector = document.getElementById("columnSelector");
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-    /* Tạo UI chọn cột */
-    bosses.forEach((boss, index) => {
-      columnSelector.innerHTML += `
-        <label>
-          <input type="checkbox" class="colToggle" data-col="${index+1}" checked>
-          ${boss}
-        </label>
-      `;
-    });
+/* LOGIN / LOGOUT HANDLING */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+  } else {
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
 
-    const saved = JSON.parse(localStorage.getItem("columnVisibility") || "{}");
-    document.querySelectorAll(".colToggle").forEach(cb => {
-      const col = cb.dataset.col;
-      if (saved[col] !== undefined) cb.checked = saved[col];
-    });
-
-    function toggleColumn(colIndex, show) {
-      const rows = table.rows;
-      for (let r = 0; r < rows.length; r++) {
-        const cell = rows[r].cells[colIndex];
-        if (cell) cell.style.display = show ? "" : "none";
-      }
+    if (!location.href.includes("login.html")) {
+      location.href = "login.html";
     }
+  }
+});
 
-    document.addEventListener("change", e => {
-      if (e.target.classList.contains("colToggle")) {
-        const col = parseInt(e.target.dataset.col);
-        toggleColumn(col, e.target.checked);
+loginBtn.onclick = () => location.href = "login.html";
+logoutBtn.onclick = () => auth.signOut().then(() => location.href = "login.html");
 
-        const save = {};
-        document.querySelectorAll(".colToggle").forEach(cb => {
-          save[cb.dataset.col] = cb.checked;
-        });
-        localStorage.setItem("columnVisibility", JSON.stringify(save));
-      }
-    });
+/* THEME */
+const themeToggle = document.getElementById("themeToggle");
+function applyTheme(mode) {
+  if (mode === "light") {
+    document.body.classList.add("light");
+    themeToggle.textContent = "Dark Mode";
+  } else {
+    document.body.classList.remove("light");
+    themeToggle.textContent = "Light Mode";
+  }
+}
+applyTheme(localStorage.getItem("themeMode") || "dark");
+themeToggle.onclick = () => {
+  const newTheme = document.body.classList.contains("light") ? "dark" : "light";
+  applyTheme(newTheme);
+  localStorage.setItem("themeMode", newTheme);
+};
 
-    /* Tạo bảng */
-    let header = "<tr><th class='channel-col'>Channel</th>";
-    bosses.forEach(b => header += `<th>${b}</th>`);
-    header += "</tr>";
-    table.innerHTML = header;
+/* LOG BUTTON */
+document.getElementById("logButton").onclick = () => location.href = "log.html";
 
-    for (let ch = 1; ch <= 30; ch++) {
-      let row = `<tr><td class="channel-col">${ch}</td>`;
-      bosses.forEach(boss => {
-        const id = `${ch}_${boss}`;
-        row += `<td><input type="checkbox" id="${id}"><div class="timer" id="t_${id}">--</div></td>`;
-      });
-      row += "</tr>";
-      table.insertAdjacentHTML("beforeend", row);
-    }
+/* BOSS TABLE */
+const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
+const table = document.getElementById("bossTable");
 
-    document.querySelectorAll(".colToggle").forEach(cb => {
-      toggleColumn(parseInt(cb.dataset.col), cb.checked);
-    });
-    /* Highlight */
-    table.addEventListener("mousemove", function(e) {
-      const cell = e.target.closest("td,th");
-      if (!cell) return;
+let header = "<tr><th>Channel</th>";
+bosses.forEach(b => header += `<th>${b}</th>`);
+header += "</tr>";
+table.innerHTML = header;
 
-      [...table.rows].forEach(r => r.classList.remove("highlight-row"));
-      [...table.querySelectorAll("td,th")].forEach(c => c.classList.remove("highlight-col"));
+for (let ch = 1; ch <= 30; ch++) {
+  let row = `<tr><td>${ch}</td>`;
+  bosses.forEach(boss => {
+    const id = `${ch}_${boss}`;
+    row += `<td><input type="checkbox" id="${id}"><div class="timer" id="t_${id}">--</div></td>`;
+  });
+  row += "</tr>";
+  table.insertAdjacentHTML("beforeend", row);
+}
 
-      const row = cell.parentElement;
-      const colIndex = cell.cellIndex;
+/* TIMER + LOGIC */
+let timersData = {};
 
-      row.classList.add("highlight-row");
+bosses.forEach(boss => {
+  for (let ch = 1; ch <= 30; ch++) {
 
-      [...table.rows].forEach(r => {
-        if (r.cells[colIndex]) r.cells[colIndex].classList.add("highlight-col");
-      });
-    });
+    const id = `${ch}_${boss}`;
+    const checkbox = document.getElementById(id);
+    const timerCell = document.getElementById("t_" + id);
 
-    table.addEventListener("mouseleave", function() {
-      [...table.rows].forEach(r => r.classList.remove("highlight-row"));
-      [...table.querySelectorAll("td,th")].forEach(c => c.classList.remove("highlight-col"));
-    });
+    /* CHECK / UNCHECK */
+    checkbox.addEventListener("change", e => {
+      const user = auth.currentUser;
+      const email = user ? user.email.split("@")[0] : "unknown";
 
-    /* Countdown + LOG + RIGHT CLICK COLOR + RIGHT CLICK TIMER */
-    bosses.forEach(boss => {
-      for (let ch = 1; ch <= 30; ch++) {
+      if (e.target.checked) {
+        db.ref("timers/" + id).set({ checked: true, startTime: Date.now() });
 
-        const id = `${ch}_${boss}`;
-        const checkbox = document.getElementById(id);
-        const timerCell = document.getElementById("t_"+id);
-
-        /* Chuột trái checkbox */
-        checkbox.addEventListener("change", e => {
-          if (e.target.checked) {
-            db.ref("timers/"+id).set({checked:true, startTime: Date.now()});
-
-            db.ref("logs").push({
-              id: id,
-              action: "check",
-              time: Date.now()
-            });
-
-          } else {
-            db.ref("timers/"+id).remove();
-            if (timerCell.intervalId) clearInterval(timerCell.intervalId);
-            timerCell.textContent = "--";
-            timerCell.className = "timer";
-
-            db.ref("logs").push({
-              id: id,
-              action: "uncheck",
-              time: Date.now()
-            });
-          }
+        db.ref("logs").push({
+          id: id,
+          action: "check",
+          time: Date.now(),
+          user: email
         });
 
-        /* Chuột phải checkbox → đổi màu vàng + lưu Firebase */
-        checkbox.addEventListener("contextmenu", e => {
-          e.preventDefault();
-
-          const colorRef = db.ref("colors/" + id);
-
-          if (checkbox.classList.contains("right-clicked")) {
-            checkbox.classList.remove("right-clicked");
-            colorRef.remove();
-          } else {
-            checkbox.classList.add("right-clicked");
-            colorRef.set(true);
-          }
-        });
-
-        /* Chuột phải timer → nhập số phút */
-        timerCell.addEventListener("contextmenu", e => {
-          e.preventDefault();
-
-          const input = prompt("Nhập số PHÚT muốn đếm ngược:");
-          if (input === null) return;
-
-          const minutesInput = parseInt(input);
-          if (isNaN(minutesInput) || minutesInput <= 0) {
-            alert("Vui lòng nhập số nguyên dương!");
-            return;
-          }
-
-          const totalSeconds = 240 * 60;
-          const remainSeconds = minutesInput * 60;
-          const newStart = Date.now() - (totalSeconds - remainSeconds) * 1000;
-
-          db.ref("timers/" + id).set({ checked: true, startTime: newStart });
-          checkbox.checked = true;
-        });
-
-      }
-    });
-
-    /* Khôi phục màu từ Firebase */
-    db.ref("colors").on("value", snapshot => {
-      const colors = snapshot.val() || {};
-
-      Object.keys(colors).forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) checkbox.classList.add("right-clicked");
-      });
-    });
-
-    /* Countdown */
-    let timersData = {};
-    db.ref("timers").on("value", snapshot => {
-      timersData = snapshot.val() || {};
-
-      Object.keys(timersData).forEach(id => {
-        const {checked, startTime} = timersData[id];
-        const timerCell = document.getElementById("t_"+id);
-        const checkbox = document.getElementById(id);
-
-        if (!timerCell || !checkbox) return;
-        checkbox.checked = checked;
-
+      } else {
+        db.ref("timers/" + id).remove();
         if (timerCell.intervalId) clearInterval(timerCell.intervalId);
+        timerCell.textContent = "--";
 
-        if (checked) {
-          timerCell.intervalId = setInterval(() => {
-            const elapsed = Math.floor((Date.now()-startTime)/1000);
-            const remain = 240*60 - elapsed;
-
-            if (remain <= 0) {
-              timerCell.textContent = "_SoS_";
-              timerCell.className = "timer red";
-              try { document.getElementById("alertSound").play(); } catch(e){}
-              clearInterval(timerCell.intervalId);
-              return;
-            }
-
-            const mm = String(Math.floor(remain / 60)).padStart(2,'0');
-            const ss = String(remain % 60).padStart(2,'0');
-            timerCell.textContent = `${mm}:${ss}`;
-
-            timerCell.className = "timer";
-            if (remain >= 235*60) timerCell.classList.add("blue");
-            else if (remain > 5*60) timerCell.classList.add("green");
-            else if (remain > 3*60) timerCell.classList.add("yellow");
-            else timerCell.classList.add("red");
-
-          },1000);
-        } else {
-          timerCell.textContent = "--";
-          timerCell.className = "timer";
-        }
-      });
+        db.ref("logs").push({
+          id: id,
+          action: "uncheck",
+          time: Date.now(),
+          user: email
+        });
+      }
     });
-        /* Notifications */
-    setInterval(() => {
-      let soonRespawn = [];
 
-      Object.keys(timersData).forEach(id => {
-        const {checked, startTime} = timersData[id];
-        if (!checked) return;
+    /* RIGHT CLICK → YELLOW MARK */
+    checkbox.addEventListener("contextmenu", e => {
+      e.preventDefault();
+      const colorRef = db.ref("colors/" + id);
 
-        const remainNow = 240*60 - Math.floor((Date.now()-startTime)/1000);
-        if (remainNow <= 0) return;
+      if (checkbox.classList.contains("right-clicked")) {
+        checkbox.classList.remove("right-clicked");
+        colorRef.remove();
+      } else {
+        checkbox.classList.add("right-clicked");
+        colorRef.set(true);
+      }
+    });
 
-        const mm = String(Math.floor(remainNow / 60)).padStart(2,'0');
-        const ss = String(remainNow % 60).padStart(2,'0');
-        const [ch, boss] = id.split("_");
+    /* RIGHT CLICK TIMER → CUSTOM MINUTES */
+    timerCell.addEventListener("contextmenu", e => {
+      e.preventDefault();
 
-        let color = remainNow >= 235*60 ? "blue"
-                  : remainNow > 5*60 ? "green"
-                  : remainNow > 3*60 ? "yellow"
-                  : "red";
+      const input = prompt("Nhập số PHÚT muốn đếm ngược:");
+      if (!input) return;
 
-        soonRespawn.push({ch, boss, text:`${mm}:${ss}`, remain: remainNow, color});
-      });
+      const minutes = parseInt(input);
+      if (isNaN(minutes) || minutes <= 0) {
+        alert("Vui lòng nhập số nguyên dương!");
+        return;
+      }
 
-      soonRespawn.sort((a,b) => a.remain - b.remain);
+      const totalSeconds = 240 * 60;
+      const remainSeconds = minutes * 60;
+      const newStart = Date.now() - (totalSeconds - remainSeconds) * 1000;
 
-      notifications.innerHTML = "";
-      soonRespawn.slice(0,5).forEach(item => {
-        const div = document.createElement("div");
-        div.textContent = `Kênh ${item.ch} - Boss ${item.boss} - Còn ${item.text}`;
-        div.className = item.color;
-        notifications.appendChild(div);
-      });
-    },1000);
+      db.ref("timers/" + id).set({ checked: true, startTime: newStart });
+      checkbox.checked = true;
+    });
 
-  </script>
+  }
+});
+
+/* RESTORE YELLOW MARKS */
+db.ref("colors").on("value", snapshot => {
+  const colors = snapshot.val() || {};
+  Object.keys(colors).forEach(id => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) checkbox.classList.add("right-clicked");
+  });
+});
+
+/* COUNTDOWN */
+db.ref("timers").on("value", snapshot => {
+  timersData = snapshot.val() || {};
+
+  Object.keys(timersData).forEach(id => {
+    const { checked, startTime } = timersData[id];
+    const timerCell = document.getElementById("t_" + id);
+    const checkbox = document.getElementById(id);
+
+    if (!timerCell || !checkbox) return;
+    checkbox.checked = checked;
+
+    if (timerCell.intervalId) clearInterval(timerCell.intervalId);
+
+    if (checked) {
+      timerCell.intervalId = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const remain = 240 * 60 - elapsed;
+
+        if (remain <= 0) {
+          timerCell.textContent = "_SoS_";
+          timerCell.className = "timer red";
+          try { alertSound.play(); } catch(e){}
+          clearInterval(timerCell.intervalId);
+          return;
+        }
+
+        const mm = String(Math.floor(remain / 60)).padStart(2, '0');
+        const ss = String(remain % 60).padStart(2, '0');
+        timerCell.textContent = `${mm}:${ss}`;
+
+        timerCell.className = "timer";
+        if (remain >= 235 * 60) timerCell.classList.add("blue");
+        else if (remain > 5 * 60) timerCell.classList.add("green");
+        else if (remain > 3 * 60) timerCell.classList.add("yellow");
+        else timerCell.classList.add("red");
+
+      }, 1000);
+    } else {
+      timerCell.textContent = "--";
+      timerCell.className = "timer";
+    }
+  });
+});
+
+/* NOTIFICATIONS */
+setInterval(() => {
+  let soon = [];
+
+  Object.keys(timersData).forEach(id => {
+    const { checked, startTime } = timersData[id];
+    if (!checked) return;
+
+    const remain = 240 * 60 - Math.floor((Date.now() - startTime) / 1000);
+    if (remain <= 0) return;
+
+    const mm = String(Math.floor(remain / 60)).padStart(2, '0');
+    const ss = String(remain % 60).padStart(2, '0');
+    const [ch, boss] = id.split("_");
+
+    soon.push({ ch, boss, text: `${mm}:${ss}`, remain });
+  });
+
+  soon.sort((a, b) => a.remain - b.remain);
+
+  const box = document.getElementById("notifications");
+  box.innerHTML = "";
+
+  soon.slice(0, 5).forEach(item => {
+    const div = document.createElement("div");
+    div.textContent = `Kênh ${item.ch} – ${item.boss} – ${item.text}`;
+    box.appendChild(div);
+  });
+
+}, 1000);
+
+</script>
+
 </body>
 </html>
-
-
-
