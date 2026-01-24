@@ -5,7 +5,22 @@
   <title>Lịch sử thao tác – Boss Tracker</title>
 
   <style>
-    body {
+    body 
+    /* NUT LOGIN - LOGOUT */
+    <button id="loginBtn" style="
+  position: fixed; top: 20px; right: 100px;
+  padding: 6px 12px; background:#58a6ff; border:none;
+  border-radius:6px; color:white; font-weight:bold; cursor:pointer;
+  z-index:999;">Login</button>
+
+<button id="logoutBtn" style="
+  position: fixed; top: 20px; right: 20px;
+  padding: 6px 12px; background:#dc3545; border:none;
+  border-radius:6px; color:white; font-weight:bold; cursor:pointer;
+  z-index:999; display:none;">Logout</button>
+
+    
+    {
       font-family: Arial, sans-serif;
       background: #0d1117;
       color: #e6edf3;
@@ -391,9 +406,37 @@
     document.getElementById("backButton").addEventListener("click", () => {
       window.location.href = "index.html";
     });
+/* XU LY LOGIN */
+    firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginBtn").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "block";
+  } else {
+    document.getElementById("loginBtn").style.display = "block";
+    document.getElementById("logoutBtn").style.display = "none";
+
+    // Chặn truy cập nếu chưa login
+    if (!window.location.href.includes("login.html")) {
+      window.location.href = "login.html";
+    }
+  }
+});
+
+document.getElementById("loginBtn").onclick = () => {
+  window.location.href = "login.html";
+};
+
+document.getElementById("logoutBtn").onclick = () => {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "login.html";
+  });
+};
+  
+  
   </script>
 
 </body>
 </html>
+
 
 
