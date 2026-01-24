@@ -40,11 +40,12 @@
 
 <script>
   /* Firebase Auth bảo vệ trang */
-  firebase.auth().onAuthStateChanged(user => {
+  /*firebase.auth().onAuthStateChanged(user => {
     if (!user) {
       window.location.href = "login.html";
     }
   });
+    */
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
     firebase.auth().signOut().then(() => {
@@ -393,5 +394,6 @@ checkbox.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
