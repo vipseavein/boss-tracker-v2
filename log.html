@@ -70,6 +70,7 @@
       font-weight: bold;
     }
 
+    /* Pagination */
     #pagination {
       margin-top: 20px;
       text-align: center;
@@ -91,16 +92,56 @@
       font-size: 16px;
       color: #58a6ff;
     }
+
+    /* Action buttons bottom-left */
+    #actions {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      z-index: 999;
+    }
+
+    #actions button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    #exportExcel { background: #28a745; color: white; }
+    #clearLogs { background: #dc3545; color: white; }
+
+    /* Back button bottom-right */
+    #backButton {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 6px 12px;
+      background: #ff9800;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,152,0,0.4);
+      z-index: 999;
+    }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- XLSX for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
 
   <h2>Lịch sử thao tác Checkbox</h2>
 
+  <!-- BỘ LỌC -->
   <div id="filters">
     <select id="filterChannel">
       <option value="">-- Lọc theo kênh --</option>
@@ -119,32 +160,42 @@
     <input type="date" id="filterDate">
   </div>
 
+  <!-- BẢNG LOG -->
   <table id="logTable">
     <tr>
       <th>Thời gian</th>
       <th>Kênh</th>
       <th>Boss</th>
       <th>Hành động</th>
-      <th>Người dùng</th>
     </tr>
   </table>
 
+  <!-- PHÂN TRANG -->
   <div id="pagination">
     <button id="prevPage">Trang trước</button>
     <span id="pageInfo">Trang 1</span>
     <button id="nextPage">Trang sau</button>
   </div>
 
+  <!-- ACTION BUTTONS BOTTOM-LEFT -->
+  <div id="actions">
+    <button id="exportExcel">Xuất Excel</button>
+    <button id="clearLogs">Xóa log cũ hơn 5 tiếng</button>
+  </div>
+
+  <!-- BACK BUTTON BOTTOM-RIGHT -->
+  <button id="backButton">Quay lại trang chính</button>
+
   <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
-  authDomain: "boss-tracker-v2.firebaseapp.com",
-  databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "boss-tracker-v2",
-  storageBucket: "boss-tracker-v2.firebasestorage.app",
-  messagingSenderId: "765872513495",
-  appId: "1:765872513495:web:11f900233496c675932b92"
-};
+      apiKey: "AIzaSyBXdf1nQabS_5tt2gpIxDxo2w14KVsyL8g",
+      authDomain: "boss-tracker-9e069.firebaseapp.com",
+      databaseURL: "https://boss-tracker-9e069-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "boss-tracker-9e069",
+      storageBucket: "boss-tracker-9e069.appspot.com",
+      messagingSenderId: "968667523286",
+      appId: "1:968667523286:web:a8c750376cfe9df7310177"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -226,7 +277,6 @@
           <th>Kênh</th>
           <th>Boss</th>
           <th>Hành động</th>
-          <th>Người dùng</th>
         </tr>
       `;
 
@@ -241,8 +291,6 @@
         const time = new Date(log.time);
         const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
 
-        const user = log.user ? log.user : "unknown";
-
         logTable.insertAdjacentHTML("beforeend", `
           <tr>
             <td>${timeStr}</td>
@@ -251,7 +299,6 @@
             <td class="${log.action}">
               ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
             </td>
-            <td>${user}</td>
           </tr>
         `);
       });
@@ -283,8 +330,69 @@
     filterBoss.onchange =
     filterAction.onchange =
     filterDate.onchange = applyFilters;
+
+    /* EXPORT EXCEL */
+    document.getElementById("exportExcel").addEventListener("click", () => {
+      if (filteredLogs.length === 0) {
+        alert("Không có dữ liệu để xuất!");
+        return;
+      }
+
+      const data = filteredLogs.map(log => {
+        const parts = log.id.split("_");
+        const ch = parts[0];
+        const boss = parts.slice(1).join("_");
+        const time = new Date(log.time);
+
+        return {
+          "Thời gian": time.toLocaleString("vi-VN"),
+          "Kênh": ch,
+          "Boss": boss,
+          "Hành động": log.action === "check" ? "Bật" : "Tắt"
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
+
+      XLSX.writeFile(workbook, "lich_su_log.xlsx");
+    });
+
+    /* CLEAR LOGS – chỉ xóa log cũ hơn 5 tiếng */
+    document.getElementById("clearLogs").addEventListener("click", () => {
+      if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
+
+      const now = Date.now();
+      const fiveHours = 5 * 60 * 60 * 1000;
+
+      db.ref("logs").once("value", snapshot => {
+        const logs = snapshot.val() || {};
+
+        Object.keys(logs).forEach(key => {
+          const log = logs[key];
+          if (!log.time) return;
+
+          if (now - log.time > fiveHours) {
+            db.ref("logs/" + key).remove();
+          }
+        });
+
+        alert("Đã xóa log cũ hơn 5 tiếng!");
+
+        allLogs = allLogs.filter(l => now - l.time <= fiveHours);
+        filteredLogs = filteredLogs.filter(l => now - l.time <= fiveHours);
+        renderLogs();
+        renderPagination();
+      });
+    });
+
+    /* BACK BUTTON */
+    document.getElementById("backButton").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
   </script>
 
 </body>
-
 </html>
+
