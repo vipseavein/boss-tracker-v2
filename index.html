@@ -14,28 +14,6 @@
       transition: 0.3s;
     }
 
-    /* LIGHT MODE FIX */
-    body.light {
-      background: #f2f2f2;
-      color: #222;
-    }
-    body.light table {
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-    }
-    body.light th {
-      background: #d0e4ff;
-      color: #003366;
-    }
-    body.light td {
-      color: #222;
-      border-color: #aac4e6;
-    }
-    body.light #notifications div {
-      color: black;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-
     h2 {
       text-align: center;
       color: #58a6ff;
@@ -129,19 +107,56 @@
       position: relative;
     }
 
-    /* LOGIN / LOGOUT BUTTONS */
-    #loginBtn, #logoutBtn {
-      position: fixed;
-      top: 20px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 999;
+    .highlight-row td {
+      background-color: rgba(255, 255, 255, 0.08) !important;
     }
-    #loginBtn { right: 100px; background: #58a6ff; color: white; }
-    #logoutBtn { right: 20px; background: #dc3545; color: white; display: none; }
+    .highlight-col {
+      background-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    body.light {
+      background: #f2f2f2;
+      color: #222;
+    }
+
+    body.light table {
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    body.light th {
+      background: #d0e4ff;
+      color: #003366;
+      text-shadow: none;
+    }
+
+    body.light td {
+      color: #222;
+      border-color: #aac4e6;
+    }
+
+    body.light #bossTable tr:nth-child(odd) {
+      background-color: #f7fbff !important;
+    }
+    body.light #bossTable tr:nth-child(even) {
+      background-color: #eaf4ff !important;
+    }
+
+    body.light .timer {
+      text-shadow: none;
+    }
+
+    body.light #notifications div {
+      color: black;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    body.light .highlight-row td {
+      background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+    body.light .highlight-col {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
 
     #themeToggle {
       padding: 6px 12px;
@@ -182,6 +197,20 @@
       margin-right: 12px;
       cursor: pointer;
     }
+
+    /* LOGIN / LOGOUT BUTTONS */
+    #loginBtn, #logoutBtn {
+      position: fixed;
+      top: 20px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+    #loginBtn { right: 100px; background: #58a6ff; color: white; }
+    #logoutBtn { right: 20px; background: #dc3545; color: white; display: none; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -210,7 +239,7 @@
 <div id="columnSelector"></div>
 
 <script>
-/* Firebase Config */
+/* Firebase Config (giữ nguyên bản index_bug) */
 const firebaseConfig = {
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   authDomain: "boss-tracker-v2.firebaseapp.com",
@@ -261,7 +290,7 @@ themeToggle.onclick = () => {
 /* LOG BUTTON */
 logButton.onclick = () => location.href = "log.html";
 
-/* COLUMN SELECTOR — FIXED */
+/* COLUMN SELECTOR */
 const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
 const columnSelector = document.getElementById("columnSelector");
 
@@ -354,6 +383,7 @@ bosses.forEach(boss => {
         db.ref("timers/" + id).remove();
         if (timerCell.intervalId) clearInterval(timerCell.intervalId);
         timerCell.textContent = "--";
+        timerCell.className = "timer"; /* RESET MÀU */
 
         db.ref("logs").push({
           id: id,
@@ -449,12 +479,12 @@ db.ref("timers").on("value", snapshot => {
       }, 1000);
     } else {
       timerCell.textContent = "--";
-      timerCell.className = "timer";
+      timerCell.className = "timer"; /* RESET MÀU */
     }
   });
 });
 
-/* NOTIFICATIONS — FIXED */
+/* NOTIFICATIONS */
 setInterval(() => {
   let soon = [];
 
@@ -479,13 +509,4 @@ setInterval(() => {
 
   soon.slice(0, 5).forEach(item => {
     const div = document.createElement("div");
-    div.textContent = `Kênh ${item.ch} – ${item.boss} – ${item.text}`;
-    box.appendChild(div);
-  });
-
-}, 1000);
-
-</script>
-
-</body>
-</html>
+    div.textContent = `Kênh ${item.ch} – ${
