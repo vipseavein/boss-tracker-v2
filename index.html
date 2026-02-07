@@ -348,11 +348,22 @@ const remain = RESPAWN_SEC - (elapsed % RESPAWN_SEC);
         const sosElapsed = Math.floor((now() - cell.dataset.sosStart) / 1000);
 
         if (sosElapsed <= 300) {
-          if (Math.floor(now() / 1000) % 2 === 0) {
-            cell.textContent = "_SoS_";
-            cell.className = "timer red";
-            return;
-          }
+          
+          let showSOS = false;
+
+if (cell.dataset.sosStart && !cell.dataset.sosOff) {
+  const sosElapsed = Math.floor((now() - cell.dataset.sosStart) / 1000);
+
+  if (sosElapsed <= 300) {
+    showSOS = Math.floor(now() / 1000) % 2 === 0;
+  } else {
+    delete cell.dataset.sosStart;
+  }
+}
+
+
+
+          
         } else {
           delete cell.dataset.sosStart;
         }
@@ -374,9 +385,11 @@ if (remain <= 0) {
     
 
       // ===== HIỂN THỊ THỜI GIAN =====
-      cell.textContent =
-        String(Math.floor(remain/60)).padStart(2,'0') + ":" +
-        String(remain%60).padStart(2,'0');
+      cell.textContent = showSOS
+  ? "_SoS_"
+  : String(Math.floor(remain/60)).padStart(2,'0') + ":" +
+    String(remain%60).padStart(2,'0');
+
 
       cell.className = "timer";
       cell.classList.add(
@@ -570,6 +583,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
