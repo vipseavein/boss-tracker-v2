@@ -2,14 +2,21 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Lịch sử thao tác – Boss Tracker</title>
- <link rel="icon" type="image/x-icon" href="GmBuff.png">
+  <title>Boss Tracker - Cabal Online Ultimate Combo (SEA)</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <style>
+    /* ===== XIN CHÀO CABAL-ER ===== */
+    /*!
+ * Boss Tracker – Private Project - seavein@gmail.com
+ * Unauthorized copying or modification is prohibited.
+ */
+    
     body {
       font-family: Arial, sans-serif;
       background: #0d1117;
       color: #e6edf3;
       padding: 20px;
+      transition: 0.3s;
     }
 
     h2 {
@@ -20,104 +27,165 @@
       margin-bottom: 20px;
     }
 
-    #filters {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    select, input[type="date"] {
-      padding: 6px 10px;
-      margin: 0 5px;
-      border-radius: 6px;
-      border: 1px solid #58a6ff;
-      background: #0d1117;
-      color: #e6edf3;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      background: rgba(255,255,255,0.05);
+      table-layout: fixed;
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 0 10px rgba(88,166,255,0.3);
+      box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+      transition: 0.3s;
     }
 
     th, td {
-      border: 1px solid rgba(88,166,255,0.2);
-      padding: 8px;
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      padding: 4px;
       text-align: center;
+      color: #c9d1d9;
+      white-space: nowrap;
+      transition: 0.3s;
+    }
+
+    th.channel-col, td.channel-col {
+      width: calc(100% / 26);
       white-space: nowrap;
     }
 
     th {
-      background: rgba(88,166,255,0.2);
+      background: rgba(88, 166, 255, 0.15);
       color: #58a6ff;
       font-weight: bold;
+      text-shadow: 0 0 5px #58a6ff;
     }
 
-    tr:nth-child(even) {
-      background: rgba(255,255,255,0.05);
+    #bossTable tr:nth-child(odd) {
+      background-color: rgba(88, 166, 255, 0.05) !important;
+    }
+    #bossTable tr:nth-child(even) {
+      background-color: rgba(88, 166, 255, 0.1) !important;
     }
 
-    .check {
-      color: #00ff88;
+    input[type="checkbox"] {
+      transform: scale(1.5);
+      cursor: pointer;
+      accent-color: #58a6ff;
+      vertical-align: middle;
+    }
+
+    .right-clicked {
+      outline: 3px solid #ffeb3b !important;
+      box-shadow: 0 0 10px #ffeb3b;
+      border-radius: 4px;
+    }
+
+    .timer {
       font-weight: bold;
+      text-shadow: 0 0 8px rgba(255,255,255,0.5);
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      min-width: 50px;
+      vertical-align: middle;
     }
 
-    .uncheck {
-      color: #ff4444;
-      font-weight: bold;
-    }
+    .blue { background-color: #0077ff !important; color: white; }
+    .green { background-color: #00cc44 !important; color: black; }
+    .yellow { background-color: #ffcc00 !important; color: black; }
+    .red { background-color: #ff0033 !important; color: white; }
 
-    /* Pagination */
-    #pagination {
-      margin-top: 20px;
+    #notifications {
+      margin-top: 25px;
       text-align: center;
+      position: relative;
     }
 
-    #pagination button {
+    #notifications div {
+      width: 60%;
+      margin: 8px auto;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      color: black;
+      box-shadow: 0 0 10px rgba(255,255,255,0.3);
+      position: relative;
+    }
+
+    .highlight-row td {
+      background-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .highlight-col {
+      background-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    body.light {
+      background: #f2f2f2;
+      color: #222;
+    }
+
+    body.light table {
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    body.light th {
+      background: #d0e4ff;
+      color: #003366;
+      text-shadow: none;
+    }
+
+    body.light td {
+      color: #222;
+      border-color: #aac4e6;
+    }
+
+    body.light #bossTable tr:nth-child(odd) {
+      background-color: #f7fbff !important;
+    }
+    body.light #bossTable tr:nth-child(even) {
+      background-color: #eaf4ff !important;
+    }
+
+    body.light .timer {
+      text-shadow: none;
+    }
+
+    body.light #notifications div {
+      color: black;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    body.light .highlight-row td {
+      background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+    body.light .highlight-col {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    #themeToggle {
       padding: 6px 12px;
-      margin: 0 5px;
       background: #58a6ff;
       border: none;
       border-radius: 6px;
       color: white;
-      cursor: pointer;
       font-weight: bold;
-    }
-
-    #pagination span {
-      margin: 0 10px;
-      font-size: 16px;
-      color: #58a6ff;
-    }
-
-    /* Action buttons bottom-left */
-    #actions {
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(88,166,255,0.4);
+      transition: 0.3s;
+      font-size: 13px;
       position: fixed;
-      left: 20px;
+      right: 20px;
       bottom: 20px;
       z-index: 999;
     }
 
-    #actions button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-right: 8px;
+    body.light #themeToggle {
+      background: #003366;
+      color: white;
     }
 
-    #exportExcel { background: #28a745; color: white; }
-    #clearLogs { background: #dc3545; color: white; }
-
-    /* Back button bottom-right */
-    #backButton {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
+    #logButton {
       padding: 6px 12px;
       background: #ff9800;
       border: none;
@@ -126,277 +194,395 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(255,152,0,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+      position: fixed;
+      right: 20px;
+      bottom: 60px;
       z-index: 999;
+    }
+
+    body.light #logButton {
+      background: #cc7a00;
+    }
+
+    #columnSelector {
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(88,166,255,0.3);
+    }
+    #columnSelector label {
+      margin-right: 12px;
+      cursor: pointer;
     }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <!-- XLSX for Excel export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
 
-  <h2>Lịch sử thao tác Checkbox</h2>
+<audio id="alertSound">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
-  <!-- BỘ LỌC -->
-  <div id="filters">
-    <select id="filterChannel">
-      <option value="">-- Lọc theo kênh --</option>
-    </select>
+<h2>Boss Tracker - Cabal Ultimate Combo (SEA)</h2>
+<table id="bossTable"></table>
+<div id="notifications"></div>
 
-    <select id="filterBoss">
-      <option value="">-- Lọc theo boss --</option>
-    </select>
+<button id="themeToggle">Light Mode</button>
+<button id="logButton">LOG</button>
+<div id="columnSelector"></div>
 
-    <select id="filterAction">
-      <option value="">-- Hành động --</option>
-      <option value="check">✔ Bật</option>
-      <option value="uncheck">✘ Tắt</option>
-    </select>
+<script>
+/* ====== PHẦN JS + TỐI ƯU NHẸ ====== */
 
-    <input type="date" id="filterDate">
-  </div>
-
-  <!-- BẢNG LOG -->
-  <table id="logTable">
-    <tr>
-      <th>Thời gian</th>
-      <th>Kênh</th>
-      <th>Boss</th>
-      <th>Hành động</th>
-    </tr>
-  </table>
-
-  <!-- PHÂN TRANG -->
-  <div id="pagination">
-    <button id="prevPage">Trang trước</button>
-    <span id="pageInfo">Trang 1</span>
-    <button id="nextPage">Trang sau</button>
-  </div>
-
-  <!-- ACTION BUTTONS BOTTOM-LEFT -->
-  <div id="actions">
-    <button id="exportExcel">Xuất Excel</button>
-    <button id="clearLogs">Xóa log cũ hơn 5 tiếng</button>
-  </div>
-
-  <!-- BACK BUTTON BOTTOM-RIGHT -->
-  <button id="backButton">Quay lại trang chính</button>
-
-  <script>
-   /* Firebase Config (giữ nguyên index_bug) */
-const firebaseConfig = {
-  apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
-  authDomain: "boss-tracker-v2.firebaseapp.com",
-  databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "boss-tracker-v2",
-  storageBucket: "boss-tracker-v2.firebasestorage.app",
-  messagingSenderId: "765872513495",
-  appId: "1:765872513495:web:11f900233496c675932b92"
+/* ---------- THEME ---------- */
+const themeToggle = document.getElementById("themeToggle");
+function applyTheme(mode) {
+  document.body.classList.toggle("light", mode === "light");
+  themeToggle.textContent = mode === "light" ? "Dark Mode" : "Light Mode";
+}
+const savedTheme = localStorage.getItem("themeMode") || "dark";
+applyTheme(savedTheme);
+themeToggle.onclick = () => {
+  const m = document.body.classList.contains("light") ? "dark" : "light";
+  applyTheme(m);
+  localStorage.setItem("themeMode", m);
 };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+document.getElementById("logButton").onclick = () => location.href = "log.html";
 
-    const logTable = document.getElementById("logTable");
-    const filterChannel = document.getElementById("filterChannel");
-    const filterBoss = document.getElementById("filterBoss");
-    const filterAction = document.getElementById("filterAction");
-    const filterDate = document.getElementById("filterDate");
+/* ---------- FIREBASE ---------- */
+firebase.initializeApp({
+  apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
+  databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
 
-    let allLogs = [];
-    let filteredLogs = [];
+});
+const db = firebase.database();
 
-    let currentPage = 1;
-    const rowsPerPage = 20;
+/* ---------- SERVER TIME ---------- */
+let serverOffset = 0;
+db.ref(".info/serverTimeOffset").on("value", s => serverOffset = s.val() || 0);
+function now() { return Date.now() + serverOffset; }
 
-    db.ref("logs").orderByChild("time").on("value", snapshot => {
-      allLogs = [];
+/* ---------- DATA ---------- */
+const bosses = ["Manticore","Dark Kimzark","Minisha","Pluma","Pena Top","Pena Bot","Quadra","Tank Top","Tank Bot","Cây","Sói","Bò","Cauda"];
+const table = document.getElementById("bossTable");
+const notifications = document.getElementById("notifications");
+const columnSelector = document.getElementById("columnSelector");
 
-      snapshot.forEach(item => {
-        const log = item.val();
-        if (!log || !log.id || !log.time) return;
-        allLogs.push(log);
-      });
-    allLogs.reverse();
+/* ---------- COLUMN SELECT ---------- */
+bosses.forEach((boss, i) => {
+  columnSelector.innerHTML += `<label><input type="checkbox" class="colToggle" data-col="${i+1}" checked> ${boss}</label>`;
+});
+const savedCols = JSON.parse(localStorage.getItem("columnVisibility") || "{}");
+document.querySelectorAll(".colToggle").forEach(cb => {
+  if (savedCols[cb.dataset.col] !== undefined) cb.checked = savedCols[cb.dataset.col];
+});
+function toggleColumn(i, show) {
+  [...table.rows].forEach(r => r.cells[i] && (r.cells[i].style.display = show ? "" : "none"));
+}
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("colToggle")) return;
+  toggleColumn(+e.target.dataset.col, e.target.checked);
+  const save = {};
+  document.querySelectorAll(".colToggle").forEach(cb => save[cb.dataset.col] = cb.checked);
+  localStorage.setItem("columnVisibility", JSON.stringify(save));
+});
 
-      applyFilters();
-    });
+/* ---------- TABLE ---------- */
+let header = "<tr><th class='channel-col'>Channel</th>";
+bosses.forEach(b => header += `<th>${b}</th>`);
+header += "</tr>";
+table.innerHTML = header;
 
-    function applyFilters() {
-      filteredLogs = allLogs.filter(log => {
-        const parts = log.id.split("_");
-        if (parts.length < 2) return false;
+for (let ch = 1; ch <= 30; ch++) {
+  let row = `<tr><td class="channel-col">${ch}</td>`;
+  bosses.forEach(b => {
+    const id = `${ch}_${b}`;
+    row += `<td><input type="checkbox" id="${id}"><div class="timer" id="t_${id}">--</div></td>`;
+  });
+  row += "</tr>";
+  table.insertAdjacentHTML("beforeend", row);
+}
+document.querySelectorAll(".colToggle").forEach(cb => toggleColumn(+cb.dataset.col, cb.checked));
 
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
+/* ---------- HIGHLIGHT (TỐI ƯU) ---------- */
+let lastCell = null;
+table.addEventListener("mouseover", e => {
+  const cell = e.target.closest("td,th");
+  if (!cell || cell === lastCell) return;
+  lastCell = cell;
 
-        if (filterChannel.value && filterChannel.value !== ch) return false;
-        if (filterBoss.value && filterBoss.value !== boss) return false;
-        if (filterAction.value && filterAction.value !== log.action) return false;
+  table.querySelectorAll(".highlight-row").forEach(r => r.classList.remove("highlight-row"));
+  table.querySelectorAll(".highlight-col").forEach(c => c.classList.remove("highlight-col"));
 
-        if (filterDate.value) {
-          const d = new Date(log.time);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          if (`${yyyy}-${mm}-${dd}` !== filterDate.value) return false;
-        }
+  const col = cell.cellIndex;
+  cell.parentElement.classList.add("highlight-row");
+  [...table.rows].forEach(r => r.cells[col] && r.cells[col].classList.add("highlight-col"));
+});
+table.addEventListener("mouseleave", () => {
+  table.querySelectorAll(".highlight-row").forEach(r => r.classList.remove("highlight-row"));
+  table.querySelectorAll(".highlight-col").forEach(c => c.classList.remove("highlight-col"));
+});
 
-        return true;
-      });
+/* ---------- TIMER (GLOBAL TICK) ---------- */
+let timersData = {};
+let globalTick = null;
 
-      currentPage = 1;
-      renderPagination();
-      renderLogs();
-      fillFilterOptions();
-    }
+function ensureGlobalTick() {
+  if (globalTick) return;
 
-    function fillFilterOptions() {
-      const channels = new Set();
-      const bosses = new Set();
+  globalTick = setInterval(() => {
+    document.querySelectorAll(".timer[data-start]").forEach(cell => {
 
-      allLogs.forEach(log => {
-        const parts = log.id.split("_");
-        if (parts.length < 2) return;
-        channels.add(parts[0]);
-        bosses.add(parts.slice(1).join("_"));
-      });
+      const start = +cell.dataset.start;
+const remain = Math.max(0, 240*60 - Math.floor((now() - start)/1000));
 
-      filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
-      channels.forEach(ch => filterChannel.innerHTML += `<option value="${ch}">Kênh ${ch}</option>`);
+      // ===== HẾT TIME → CHỈ HIỂN THỊ =====
+if (remain <= 0) {
+  cell.textContent = "Respawn";
+  cell.className = "timer red";
+  return;
+}
 
-      filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
-      bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
-    }
 
-    function renderLogs() {
-      logTable.innerHTML = `
-        <tr>
-          <th>Thời gian</th>
-          <th>Kênh</th>
-          <th>Boss</th>
-          <th>Hành động</th>
-        </tr>
-      `;
-
-      const start = (currentPage - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-
-      filteredLogs.slice(start, end).forEach(log => {
-        const parts = log.id.split("_");
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
-
-        const time = new Date(log.time);
-        const timeStr = time.toLocaleTimeString("vi-VN") + " - " + time.toLocaleDateString("vi-VN");
-
-        logTable.insertAdjacentHTML("beforeend", `
-          <tr>
-            <td>${timeStr}</td>
-            <td>${ch}</td>
-            <td>${boss}</td>
-            <td class="${log.action}">
-              ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
-            </td>
-          </tr>
-        `);
-      });
-    }
-
-    function renderPagination() {
-      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-      document.getElementById("pageInfo").textContent = `Trang ${currentPage} / ${totalPages || 1}`;
-    }
-
-    document.getElementById("prevPage").onclick = () => {
-      if (currentPage > 1) {
-        currentPage--;
-        renderPagination();
-        renderLogs();
-      }
-    };
-
-    document.getElementById("nextPage").onclick = () => {
-      const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-      if (currentPage < totalPages) {
-        currentPage++;
-        renderPagination();
-        renderLogs();
-      }
-    };
-
-    filterChannel.onchange =
-    filterBoss.onchange =
-    filterAction.onchange =
-    filterDate.onchange = applyFilters;
-
-    /* EXPORT EXCEL */
-    document.getElementById("exportExcel").addEventListener("click", () => {
-      if (filteredLogs.length === 0) {
-        alert("Không có dữ liệu để xuất!");
-        return;
+      if (remain > 0 && cell.dataset.resetDone) {
+        delete cell.dataset.resetDone;
       }
 
-      const data = filteredLogs.map(log => {
-        const parts = log.id.split("_");
-        const ch = parts[0];
-        const boss = parts.slice(1).join("_");
-        const time = new Date(log.time);
+      // ===== SOS =====
+      if (cell.dataset.sosStart && !cell.dataset.sosOff) {
+        const sosElapsed = Math.floor((now() - cell.dataset.sosStart) / 1000);
 
-        return {
-          "Thời gian": time.toLocaleString("vi-VN"),
-          "Kênh": ch,
-          "Boss": boss,
-          "Hành động": log.action === "check" ? "Bật" : "Tắt"
-        };
-      });
-
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Logs");
-
-      XLSX.writeFile(workbook, "lich_su_log.xlsx");
-    });
-
-    /* CLEAR LOGS – chỉ xóa log cũ hơn 5 tiếng */
-    document.getElementById("clearLogs").addEventListener("click", () => {
-      if (!confirm("Bạn có chắc muốn xóa log cũ hơn 5 tiếng?")) return;
-
-      const now = Date.now();
-      const fiveHours = 5 * 60 * 60 * 1000;
-
-      db.ref("logs").once("value", snapshot => {
-        const logs = snapshot.val() || {};
-
-        Object.keys(logs).forEach(key => {
-          const log = logs[key];
-          if (!log.time) return;
-
-          if (now - log.time > fiveHours) {
-            db.ref("logs/" + key).remove();
+        if (sosElapsed <= 300) {
+          if (Math.floor(now() / 1000) % 2 === 0) {
+            cell.textContent = "_SoS_";
+            cell.className = "timer red";
+            return;
           }
-        });
+        } else {
+          delete cell.dataset.sosStart;
+        }
+      }
 
-        alert("Đã xóa log cũ hơn 5 tiếng!");
+      // ===== HIỂN THỊ THỜI GIAN =====
+      cell.textContent =
+        String(Math.floor(remain/60)).padStart(2,'0') + ":" +
+        String(remain%60).padStart(2,'0');
 
-        allLogs = allLogs.filter(l => now - l.time <= fiveHours);
-        filteredLogs = filteredLogs.filter(l => now - l.time <= fiveHours);
-        renderLogs();
-        renderPagination();
-      });
+      cell.className = "timer";
+      cell.classList.add(
+        remain >= 235*60 ? "blue" :
+        remain > 5*60 ? "green" :
+        remain > 3*60 ? "yellow" : "red"
+      );
+
     });
 
-    /* BACK BUTTON */
-    document.getElementById("backButton").addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
-  </script>
+    updateNotifications();
+  }, 1000);
+}
+
+function startTimer(id, startTime, sosStart = null, sosOff = false) {
+  const cell = document.getElementById("t_" + id);
+  const cb = document.getElementById(id);
+  if (!cell || !cb) return;
+
+  cb.checked = true;
+  cell.dataset.start = startTime;
+
+  if (sosStart) {
+  cell.dataset.sosStart = sosStart;
+} else {
+  delete cell.dataset.sosStart;
+}
+
+
+  if (sosOff) cell.dataset.sosOff = "1";
+  else delete cell.dataset.sosOff;
+
+  delete cell.dataset.done;
+
+  ensureGlobalTick();
+}
+
+function stopTimer(id) {
+  const cell = document.getElementById("t_" + id);
+  const cb = document.getElementById(id);
+  if (!cell || !cb) return;
+
+  delete cell.dataset.start;
+  delete cell.dataset.done;
+  cell.textContent = "--";
+  cell.className = "timer";
+  cb.checked = false;
+}
+
+/* ---------- FIREBASE TIMER SYNC ---------- */
+db.ref("timers").on("child_added", s => {
+  timersData[s.key] = s.val();
+  if (s.val().checked) {
+    startTimer(
+      s.key,
+      s.val().startTime,
+      s.val().sosStart,
+      s.val().sosOff
+    );
+  }
+});
+
+  
+  db.ref("timers").on("child_changed", s => {
+  const old = timersData[s.key];
+  const data = s.val();
+  timersData[s.key] = data;
+
+  // Nếu startTime thay đổi → reset → phát âm thanh
+  if (old && old.startTime !== data.startTime) {
+    try { document.getElementById("alertSound").play(); } catch(e){}
+  }
+
+  if (data.checked) {
+    startTimer(s.key, data.startTime, data.sosStart, data.sosOff);
+  }
+});
+
+  
+
+db.ref("timers").on("child_removed", s => {
+  delete timersData[s.key];
+  stopTimer(s.key);
+});
+
+/* ---------- NOTIFICATIONS ---------- */
+function updateNotifications() {
+  let list = [];
+  Object.entries(timersData).forEach(([id,d]) => {
+    if (!d.checked) return;
+    const r = 240*60 - Math.floor((now()-d.startTime)/1000);
+    if (r <= 0) return;
+    const [ch,b] = id.split("_");
+    list.push({ch,b,r});
+  });
+  list.sort((a,b)=>a.r-b.r);
+  notifications.innerHTML = "";
+  list.slice(0,5).forEach(i => {
+    const div = document.createElement("div");
+    div.textContent = `Kênh ${i.ch} - Boss ${i.b} - Còn ${String(Math.floor(i.r/60)).padStart(2,'0')}:${String(i.r%60).padStart(2,'0')}`;
+    div.className = i.r>=235*60?"blue":i.r>5*60?"green":i.r>3*60?"yellow":"red";
+    notifications.appendChild(div);
+  });
+}
+
+/* ---------- EVENTS ---------- */
+bosses.forEach(b => {
+  for (let ch = 1; ch <= 30; ch++) {
+    const id = `${ch}_${b}`;
+    const cb = document.getElementById(id);
+    const cell = document.getElementById("t_" + id);
+
+    cb.onchange = e => {
+  if (e.target.checked) {
+  // Tick → start timer như cũ
+  db.ref("timers/" + id).set({
+    checked: true,
+    startTime: now()
+  });
+
+  //Lưu log check
+  db.ref("logs").push({
+    id: id,
+    time: now(),
+    action: "check"
+  });
+
+  return;
+}
+
+  // ===== UNTICK =====
+  const data = timersData[id];
+  if (!data || !data.startTime) {
+    db.ref("timers/" + id).remove();
+    return;
+  }
+
+  const remain =
+    240 * 60 - Math.floor((now() - data.startTime) / 1000);
+
+  // Chỉ hỏi khi 5–230 phút
+  if (remain >= 3 * 60 && remain <= 238 * 60) {
+    const ok = confirm("Bạn có muốn reset time boss?");
+    if (!ok) {
+      // Người dùng bấm NO → bật lại checkbox, không reset
+      e.target.checked = true;
+      return;
+    }
+  }
+
+  // YES hoặc ngoài khoảng → reset
+  db.ref("timers/" + id).remove();
+//Lưu log Uncheck
+      db.ref("logs").push({
+    id: id,
+    time: now(),
+    action: "uncheck"
+});
+};
+
+
+    cb.oncontextmenu = e => {
+      e.preventDefault();
+      const ref = db.ref("colors/"+id);
+      ref.once("value").then(s => s.exists() ? ref.remove() : ref.set(true));
+    };
+
+    cell.oncontextmenu = e => {
+      e.preventDefault();
+      const m = parseInt(prompt("Nhập số PHÚT muốn đếm ngược:"),10);
+      if (!m || m<=0) return alert("Vui lòng nhập số nguyên dương!");
+      const newStart = now() - (240*60 - m*60)*1000;
+      db.ref("timers/"+id).set({checked:true,startTime:newStart});
+      cb.checked = true;
+    };
+    //xử lý CLICK TRÁI vào timer
+    cell.onclick = () => {
+  const id = cell.id.replace("t_", "");
+  db.ref("timers/" + id).update({ sosOff: true });// Tắt SoS
+
+};
+
+    
+  }
+});
+
+/* ---------- COLORS ---------- */
+db.ref("colors").on("child_added", s => document.getElementById(s.key)?.classList.add("right-clicked"));
+db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classList.remove("right-clicked"));
+</script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
