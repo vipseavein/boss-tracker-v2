@@ -343,19 +343,7 @@ const RESPAWN_SEC = 240 * 60;
 const elapsed = Math.floor((now() - start) / 1000);
 const remain = RESPAWN_SEC - (elapsed % RESPAWN_SEC);
 
-      // ===== HẾT TIME → CHỈ HIỂN THỊ =====
-if (remain <= 0) {
-  cell.textContent = "Respawn";
-  cell.className = "timer red";
-  return;
-}
-
-
-      if (remain > 0 && cell.dataset.resetDone) {
-        delete cell.dataset.resetDone;
-      }
-
-      // ===== SOS =====
+        // ===== SOS =====
       if (cell.dataset.sosStart && !cell.dataset.sosOff) {
         const sosElapsed = Math.floor((now() - cell.dataset.sosStart) / 1000);
 
@@ -369,6 +357,21 @@ if (remain <= 0) {
           delete cell.dataset.sosStart;
         }
       }
+      
+      
+      // ===== HẾT TIME → CHỈ HIỂN THỊ =====
+if (remain <= 0) {
+  cell.textContent = "Respawn";
+  cell.className = "timer red";
+  return;
+}
+
+
+      if (remain > 0 && cell.dataset.resetDone) {
+        delete cell.dataset.resetDone;
+      }
+
+    
 
       // ===== HIỂN THỊ THỜI GIAN =====
       cell.textContent =
@@ -567,6 +570,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
