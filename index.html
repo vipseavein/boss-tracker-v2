@@ -336,10 +336,11 @@ function ensureGlobalTick() {
   if (globalTick) return;
 
   globalTick = setInterval(() => {
-    document.querySelectorAll(".timer[data-start]").forEach(cell => {
+    document.querySelectorAll(".timer[data-expire]").forEach(cell => {
 
-      const start = +cell.dataset.start;
-const remain = Math.max(0, 240*60 - Math.floor((now() - start)/1000));
+  const expire = +cell.dataset.expire;
+  const remain = Math.floor((expire - now()) / 1000);
+
 
       // ===== HẾT TIME → CHỈ HIỂN THỊ =====
 if (remain <= 0) {
@@ -356,10 +357,10 @@ if (remain <= 0) {
 
   // trong lúc CHỜ firebase reset → chỉ HIỂN THỊ
   cell.textContent = "BOSS";
-  cell.className = "timer red";
-  delete cell.dataset.start; 
-  // ⛔ KHÔNG CHẠY CÁC LOGIC BÊN DƯỚI
-  return; // <-- CHỈ return ở ĐÂY, bên trong forEach
+cell.className = "timer red";
+// KHÔNG xóa expire
+return;
+
 }
 
 
@@ -400,13 +401,16 @@ if (remain <= 0) {
   }, 1000);
 }
 
-function startTimer(id, startTime, sosStart = null, sosOff = false) {
+function startTimer(id, expireAt, sosStart = null, sosOff = false) {
+
   const cell = document.getElementById("t_" + id);
   const cb = document.getElementById(id);
   if (!cell || !cb) return;
 
   cb.checked = true;
-  cell.dataset.start = startTime;
+  cell.dataset.expire = expireAt;
+  delete cell.dataset.done;
+
 
   if (sosStart) {
   cell.dataset.sosStart = sosStart;
@@ -440,11 +444,12 @@ db.ref("timers").on("child_added", s => {
   timersData[s.key] = s.val();
   if (s.val().checked) {
     startTimer(
-      s.key,
-      s.val().startTime,
-      s.val().sosStart,
-      s.val().sosOff
-    );
+  s.key,
+  s.val().expireAt,
+  s.val().sosStart,
+  s.val().sosOff
+);
+
   }
 });
 
@@ -476,7 +481,8 @@ function updateNotifications() {
   let list = [];
   Object.entries(timersData).forEach(([id,d]) => {
     if (!d.checked) return;
-    const r = 240*60 - Math.floor((now()-d.startTime)/1000);
+    const r = Math.floor((d.expireAt - now()) / 1000);
+
     if (r <= 0) return;
     const [ch,b] = id.split("_");
     list.push({ch,b,r});
@@ -502,9 +508,10 @@ bosses.forEach(b => {
   if (e.target.checked) {
   // Tick → start timer như cũ
   db.ref("timers/" + id).set({
-    checked: true,
-    startTime: now()
-  });
+  checked: true,
+  expireAt: now() + 240 * 60 * 1000
+});
+
 
   //Lưu log check
   db.ref("logs").push({
@@ -579,6 +586,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
