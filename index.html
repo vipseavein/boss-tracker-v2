@@ -364,9 +364,12 @@ cell.className = "timer red";
   const newExpire = now() + 240 * 60 * 1000;
 
   db.ref("timers/" + id).set({
-    checked: true,
-    expireAt: newExpire
-  });
+  checked: true,
+  expireAt: newExpire,
+  sosStart: now(),   // bắt đầu lại thời gian SOS
+  sosOff: false      // bật lại SOS
+});
+
 }, 1000);
 
 
@@ -596,6 +599,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
