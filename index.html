@@ -460,9 +460,7 @@ db.ref("timers").on("child_added", s => {
   timersData[s.key] = data;
   delete data.expired;
   // Nếu startTime thay đổi → reset → phát âm thanh
-  if (old && old.startTime !== data.startTime) {
-    try { document.getElementById("alertSound").play(); } catch(e){}
-  }
+  
 
   if (data.checked) {
     startTimer(s.key, data.startTime, data.sosStart, data.sosOff);
@@ -507,10 +505,11 @@ bosses.forEach(b => {
     cb.onchange = e => {
   if (e.target.checked) {
   // Tick → start timer như cũ
-  db.ref("timers/" + id).set({
+ db.ref("timers/" + id).set({
   checked: true,
   expireAt: now() + 240 * 60 * 1000
 });
+
 
 
   //Lưu log check
@@ -525,10 +524,24 @@ bosses.forEach(b => {
 
   // ===== UNTICK =====
   const data = timersData[id];
-  if (!data || !data.startTime) {
-    db.ref("timers/" + id).remove();
+if (!data || !data.expireAt) {
+  db.ref("timers/" + id).remove();
+  return;
+}
+
+const remain = Math.floor((data.expireAt - now()) / 1000);
+
+// chỉ hỏi reset khi còn 3–238 phút
+if (remain >= 3 * 60 && remain <= 238 * 60) {
+  const ok = confirm("Bạn có muốn reset time boss?");
+  if (!ok) {
+    e.target.checked = true;
     return;
   }
+}
+
+db.ref("timers/" + id).remove();
+
 
   const remain =
     240 * 60 - Math.floor((now() - data.startTime) / 1000);
@@ -561,13 +574,24 @@ bosses.forEach(b => {
     };
 
     cell.oncontextmenu = e => {
-      e.preventDefault();
-      const m = parseInt(prompt("Nhập số PHÚT muốn đếm ngược:"),10);
-      if (!m || m<=0) return alert("Vui lòng nhập số nguyên dương!");
-      const newStart = now() - (240*60 - m*60)*1000;
-      db.ref("timers/"+id).set({checked:true,startTime:newStart});
-      cb.checked = true;
-    };
+  e.preventDefault();
+
+  const m = parseInt(prompt("Nhập số PHÚT muốn đếm ngược:"), 10);
+  if (!Number.isInteger(m) || m <= 0) {
+    alert("Vui lòng nhập số phút hợp lệ!");
+    return;
+  }
+
+  const expireAt = now() + m * 60 * 1000;
+
+  db.ref("timers/" + id).set({
+    checked: true,
+    expireAt: expireAt
+  });
+
+  cb.checked = true;
+};
+
     //xử lý CLICK TRÁI vào timer
     cell.onclick = () => {
   const id = cell.id.replace("t_", "");
@@ -586,6 +610,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
