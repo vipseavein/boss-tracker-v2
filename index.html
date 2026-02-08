@@ -432,7 +432,7 @@ function stopTimer(id) {
   const cb = document.getElementById(id);
   if (!cell || !cb) return;
 
-  delete cell.dataset.start;
+ delete cell.dataset.expire;
   delete cell.dataset.done;
   cell.textContent = "--";
   cell.className = "timer";
@@ -462,9 +462,10 @@ db.ref("timers").on("child_added", s => {
   // Nếu startTime thay đổi → reset → phát âm thanh
   
 
-  if (data.checked) {
-    startTimer(s.key, data.startTime, data.sosStart, data.sosOff);
-  }
+  if (data.checked && data.expireAt) {
+  startTimer(s.key, data.expireAt, data.sosStart, data.sosOff);
+}
+
 });
 
   
@@ -502,13 +503,22 @@ bosses.forEach(b => {
     const cb = document.getElementById(id);
     const cell = document.getElementById("t_" + id);
 
-    cb.onchange = e => {
-  if (e.target.checked) {
-  // Tick → start timer như cũ
- db.ref("timers/" + id).set({
-  checked: true,
-  expireAt: now() + 240 * 60 * 1000
-});
+    if (!cb.checked) {
+  const data = timersData[id];
+
+  stopTimer(id);
+  cell.textContent = "";
+  cb.disabled = true;
+
+  db.ref("timers/" + id)
+    .remove()
+    .finally(() => {
+      cb.disabled = false;
+    });
+
+  return;
+}
+
 
 
 
@@ -610,6 +620,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
