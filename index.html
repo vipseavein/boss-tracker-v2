@@ -503,116 +503,72 @@ bosses.forEach(b => {
     const cb = document.getElementById(id);
     const cell = document.getElementById("t_" + id);
 
-    if (!cb.checked) {
-  const data = timersData[id];
+    // CLICK CHECKBOX
+    cb.onclick = e => {
+      if (cb.checked) {
+        // CHECK → tạo timer mới
+        db.ref("logs").push({
+          id: id,
+          time: now(),
+          action: "check"
+        });
+      } else {
+        // UNCHECK → xóa timer
+        const data = timersData[id];
+        if (!data || !data.expireAt) {
+          db.ref("timers/" + id).remove();
+          return;
+        }
 
-  stopTimer(id);
-  cell.textContent = "";
-  cb.disabled = true;
+        const remain = Math.floor((data.expireAt - now()) / 1000);
 
-  db.ref("timers/" + id)
-    .remove()
-    .finally(() => {
-      cb.disabled = false;
-    });
+        if (remain >= 3 * 60 && remain <= 238 * 60) {
+          const ok = confirm("Bạn có muốn reset time boss?");
+          if (!ok) {
+            cb.checked = true;
+            return;
+          }
+        }
 
-  return;
-}
+        db.ref("timers/" + id).remove();
 
+        db.ref("logs").push({
+          id: id,
+          time: now(),
+          action: "uncheck"
+        });
+      }
+    };
 
-
-
-  //Lưu log check
-  db.ref("logs").push({
-    id: id,
-    time: now(),
-    action: "check"
-  });
-
-  return;
-}
-
-  // ===== UNTICK =====
-  const data = timersData[id];
-if (!data || !data.expireAt) {
-  db.ref("timers/" + id).remove();
-  return;
-}
-
-const remain = Math.floor((data.expireAt - now()) / 1000);
-
-// chỉ hỏi reset khi còn 3–238 phút
-if (remain >= 3 * 60 && remain <= 238 * 60) {
-  const ok = confirm("Bạn có muốn reset time boss?");
-  if (!ok) {
-    e.target.checked = true;
-    return;
-  }
-}
-
-db.ref("timers/" + id).remove();
-
-
-  const remain =
-    240 * 60 - Math.floor((now() - data.startTime) / 1000);
-
-  // Chỉ hỏi khi 5–230 phút
-  if (remain >= 3 * 60 && remain <= 238 * 60) {
-    const ok = confirm("Bạn có muốn reset time boss?");
-    if (!ok) {
-      // Người dùng bấm NO → bật lại checkbox, không reset
-      e.target.checked = true;
-      return;
-    }
-  }
-
-  // YES hoặc ngoài khoảng → reset
-  db.ref("timers/" + id).remove();
-//Lưu log Uncheck
-      db.ref("logs").push({
-    id: id,
-    time: now(),
-    action: "uncheck"
-});
-};
-
-
+    // RIGHT CLICK CHECKBOX → highlight
     cb.oncontextmenu = e => {
       e.preventDefault();
-      const ref = db.ref("colors/"+id);
+      const ref = db.ref("colors/" + id);
       ref.once("value").then(s => s.exists() ? ref.remove() : ref.set(true));
     };
 
+    // RIGHT CLICK TIMER → set phút
     cell.oncontextmenu = e => {
-  e.preventDefault();
+      e.preventDefault();
+      const m = parseInt(prompt("Nhập số PHÚT muốn đếm ngược:"), 10);
+      if (!Number.isInteger(m) || m <= 0) {
+        alert("Vui lòng nhập số phút hợp lệ!");
+        return;
+      }
+      const expireAt = now() + m * 60 * 1000;
+      db.ref("timers/" + id).set({
+        checked: true,
+        expireAt: expireAt
+      });
+      cb.checked = true;
+    };
 
-  const m = parseInt(prompt("Nhập số PHÚT muốn đếm ngược:"), 10);
-  if (!Number.isInteger(m) || m <= 0) {
-    alert("Vui lòng nhập số phút hợp lệ!");
-    return;
-  }
-
-  const expireAt = now() + m * 60 * 1000;
-
-  db.ref("timers/" + id).set({
-    checked: true,
-    expireAt: expireAt
-  });
-
-  cb.checked = true;
-};
-
-    //xử lý CLICK TRÁI vào timer
+    // LEFT CLICK TIMER → tắt SOS
     cell.onclick = () => {
-  const id = cell.id.replace("t_", "");
-  db.ref("timers/" + id).update({ sosOff: true });// Tắt SoS
-
-};
-
-    
+      db.ref("timers/" + id).update({ sosOff: true });
+    };
   }
 });
-
 /* ---------- COLORS ---------- */
 db.ref("colors").on("child_added", s => document.getElementById(s.key)?.classList.add("right-clicked"));
 db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classList.remove("right-clicked"));
@@ -620,6 +576,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
