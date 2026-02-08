@@ -359,9 +359,15 @@ if (remain <= 0) {
   cell.textContent = "BOSS";
 cell.className = "timer red";
 // Tự reset sau 1 giây
-  setTimeout(() => {
-    db.ref("timers/" + cell.id.replace("t_", "")).remove();
-  }, 1000);
+ setTimeout(() => {
+  const id = cell.id.replace("t_", "");
+  const newExpire = now() + 240 * 60 * 1000;
+
+  db.ref("timers/" + id).set({
+    checked: true,
+    expireAt: newExpire
+  });
+}, 1000);
 
 
   
@@ -590,6 +596,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
