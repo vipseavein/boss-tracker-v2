@@ -259,7 +259,6 @@ document.getElementById("logButton").onclick = () => location.href = "log.html";
 firebase.initializeApp({
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
-
 });
 const db = firebase.database();
 
@@ -344,9 +343,23 @@ const remain = Math.max(0, 240*60 - Math.floor((now() - start)/1000));
 
       // ===== HẾT TIME → CHỈ HIỂN THỊ =====
 if (remain <= 0) {
-  cell.textContent = "Respawn";
+
+  // phát âm thanh đúng 1 lần khi chạm 00:00
+  if (!cell.dataset.done) {
+    cell.dataset.done = "1";
+    try {
+      const snd = document.getElementById("alertSound");
+      snd.currentTime = 0;
+      snd.play();
+    } catch(e){}
+  }
+
+  // trong lúc CHỜ firebase reset → chỉ HIỂN THỊ
+  cell.textContent = "BOSS";
   cell.className = "timer red";
-  return;
+  delete cell.dataset.start; 
+  // ⛔ KHÔNG CHẠY CÁC LOGIC BÊN DƯỚI
+  return; // <-- CHỈ return ở ĐÂY, bên trong forEach
 }
 
 
@@ -440,7 +453,7 @@ db.ref("timers").on("child_added", s => {
   const old = timersData[s.key];
   const data = s.val();
   timersData[s.key] = data;
-
+  delete data.expired;
   // Nếu startTime thay đổi → reset → phát âm thanh
   if (old && old.startTime !== data.startTime) {
     try { document.getElementById("alertSound").play(); } catch(e){}
@@ -566,6 +579,15 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 
