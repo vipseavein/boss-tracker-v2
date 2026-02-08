@@ -502,6 +502,7 @@ bosses.forEach(b => {
     const id = `${ch}_${b}`;
     const cb = document.getElementById(id);
     const cell = document.getElementById("t_" + id);
+    if (!cb || !cell) continue;
 
     // CLICK CHECKBOX
     cb.onclick = e => {
@@ -576,6 +577,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
