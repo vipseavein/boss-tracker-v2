@@ -362,7 +362,7 @@ cell.className = "timer red";
  setTimeout(() => {
   const id = cell.id.replace("t_", "");
   const newExpire = now() + 240 * 60 * 1000;
-
+  delete cell.dataset.done; 
   db.ref("timers/" + id).set({
   checked: true,
   expireAt: newExpire,
@@ -424,8 +424,9 @@ function startTimer(id, expireAt, sosStart = null, sosOff = false) {
   if (!cell || !cb) return;
 
   cb.checked = true;
-  cell.dataset.expire = expireAt;
   delete cell.dataset.done;
+  cell.dataset.expire = expireAt;
+  
 
 
   if (sosStart) {
@@ -599,6 +600,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
