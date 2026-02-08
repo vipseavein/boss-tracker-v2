@@ -358,6 +358,13 @@ if (remain <= 0) {
   // trong lúc CHỜ firebase reset → chỉ HIỂN THỊ
   cell.textContent = "BOSS";
 cell.className = "timer red";
+// Tự reset sau 1 giây
+  setTimeout(() => {
+    db.ref("timers/" + cell.id.replace("t_", "")).remove();
+  }, 1000);
+
+
+  
 // KHÔNG xóa expire
 return;
 
@@ -507,17 +514,23 @@ bosses.forEach(b => {
     // CLICK CHECKBOX
     cb.onclick = e => {
       if (cb.checked) {
-        // CHECK → tạo timer mới
-        db.ref("logs").push({
-          id: id,
-          time: now(),
-          action: "check"
-        });
-      } else {
+  const expireAt = now() + 240 * 60 * 1000; // 4 tiếng
+  db.ref("timers/" + id).set({
+    checked: true,
+    expireAt: expireAt
+  });
+
+  db.ref("logs").push({
+    id: id,
+    time: now(),
+    action: "check"
+  });
+}
+      else {
         // UNCHECK → xóa timer
         const data = timersData[id];
         if (!data || !data.expireAt) {
-          db.ref("timers/" + id).remove();
+          //db.ref("timers/" + id).remove();
           return;
         }
 
@@ -577,6 +590,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
