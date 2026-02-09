@@ -340,7 +340,11 @@ function ensureGlobalTick() {
 
   const expire = +cell.dataset.expire;
   const remain = Math.floor((expire - now()) / 1000);
-
+      
+      // ===== FIX LỖI 12 GIỜ =====
+      if (!expire || isNaN(remain)) {
+        return;
+      }
 
       // ===== HẾT TIME → CHỈ HIỂN THỊ =====
 if (remain <= 0) {
@@ -600,6 +604,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
