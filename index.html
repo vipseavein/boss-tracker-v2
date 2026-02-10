@@ -79,6 +79,19 @@
       border-radius: 4px;
     }
 
+    @keyframes blinkYellow {
+    0%   { box-shadow: 0 0 4px #ffeb3b; }
+    50%  { box-shadow: 0 0 14px #ffeb3b; }
+    100% { box-shadow: 0 0 4px #ffeb3b; }
+    }
+
+    .blink-yellow {
+    animation: blinkYellow 0.8s infinite;
+    }
+
+    
+      
+    
     .timer {
       font-weight: bold;
       text-shadow: 0 0 8px rgba(255,255,255,0.5);
@@ -446,6 +459,7 @@ function startTimer(id, expireAt, sosStart = null, sosOff = false) {
   delete cell.dataset.done;
 
   ensureGlobalTick();
+  updateBlinkState(cb, cell);
 }
 
 function stopTimer(id) {
@@ -458,8 +472,22 @@ function stopTimer(id) {
   cell.textContent = "--";
   cell.className = "timer";
   cb.checked = false;
+  updateBlinkState(cb, cell);
 }
 
+function updateBlinkState(cb, cell) {
+  if (!cb || !cell) return;
+
+  // đang có màu vàng & CHƯA có timer → nhấp nháy
+  if (cb.classList.contains("right-clicked") && !cell.dataset.expire) {
+    cb.classList.add("blink-yellow");
+  } else {
+    cb.classList.remove("blink-yellow");
+  }
+}
+
+
+  
 /* ---------- FIREBASE TIMER SYNC ---------- */
 db.ref("timers").on("child_added", s => {
   timersData[s.key] = s.val();
@@ -570,10 +598,15 @@ bosses.forEach(b => {
 
     // RIGHT CLICK CHECKBOX → highlight
     cb.oncontextmenu = e => {
-      e.preventDefault();
-      const ref = db.ref("colors/" + id);
-      ref.once("value").then(s => s.exists() ? ref.remove() : ref.set(true));
-    };
+  e.preventDefault();
+
+  const ref = db.ref("colors/" + id);
+  ref.once("value").then(s => {
+    s.exists() ? ref.remove() : ref.set(true);
+    setTimeout(() => updateBlinkState(cb, cell), 0);
+  });
+};
+
 
     // RIGHT CLICK TIMER → set phút
     cell.oncontextmenu = e => {
@@ -604,6 +637,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
