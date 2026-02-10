@@ -80,13 +80,15 @@
     }
 
     @keyframes blinkYellow {
-    0%   { box-shadow: 0 0 10px #ffeb3b; }
-    50%  { box-shadow: 0 0 20px #ffeb3b; }
-    100% { box-shadow: 0 0 10px #ffeb3b; }
+    0%   { transform: scale(1);   box-shadow: none; }
+  25%  { transform: scale(1.4); box-shadow: 0 0 30px #ff0033; }
+  50%  { transform: scale(0.9); box-shadow: none; }
+  75%  { transform: scale(1.4); box-shadow: 0 0 30px #ff0033; }
+  100% { transform: scale(1);   box-shadow: none; }
     }
 
     .blink-yellow {
-    animation: blinkYellow 0.8s infinite;
+    animation: blinkYellow 0.4s infinite;
     }
 
     
@@ -637,6 +639,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
