@@ -633,12 +633,26 @@ bosses.forEach(b => {
   }
 });
 /* ---------- COLORS ---------- */
-db.ref("colors").on("child_added", s => document.getElementById(s.key)?.classList.add("right-clicked"));
+//db.ref("colors").on("child_added", s => document.getElementById(s.key)?.classList.add("right-clicked"));
+
+db.ref("colors").on("child_added", s => {
+  const cb = document.getElementById(s.key);
+  const cell = document.getElementById("t_" + s.key);
+  if (!cb || !cell) return;
+
+  cb.classList.add("right-clicked");
+
+  // sau reload: nếu chưa có timer → kích hoạt blink
+  updateBlinkState(cb, cell);
+});
+
+  
 db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classList.remove("right-clicked"));
 </script>
 
 </body>
 </html>
+
 
 
 
