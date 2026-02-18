@@ -238,6 +238,8 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
 </head>
 
 <body>
@@ -278,7 +280,17 @@ firebase.initializeApp({
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
 });
 const db = firebase.database();
+firebase.auth().signInAnonymously()
+  .then(function() {
+    console.log("Anonymous login success");
+  })
+  .catch(function(error) {
+    console.error("Auth error:", error);
+  });
 
+
+
+  
 /* ---------- SERVER TIME ---------- */
 let serverOffset = 0;
 db.ref(".info/serverTimeOffset").on("value", s => serverOffset = s.val() || 0);
@@ -654,6 +666,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
