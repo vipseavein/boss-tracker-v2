@@ -387,8 +387,6 @@ if (remain <= 0 && remain >= -20) {
       snd.play();
     } catch(e){}
   }
-
-
   
   // trong lúc CHỜ firebase reset → chỉ HIỂN THỊ
   cell.textContent = "BOSS";
@@ -398,11 +396,29 @@ cell.className = "timer red";
   const id = cell.id.replace("t_", "");
   const newExpire = now() + 240 * 60 * 1000;
   delete cell.dataset.done; 
-  db.ref("timers/" + id).set({
-  checked: true,
-  expireAt: newExpire,
-  sosStart: now(),   // bắt đầu lại thời gian SOS
-  sosOff: false      // bật lại SOS
+  db.ref("timers/" + id).transaction(current => {
+
+  if (!current) return;
+  if (!current.expireAt) return;
+  if (!current.sosStart) return;
+
+  const elapsed = now() - current.expireAt;
+  const duration = current.expireAt - current.sosStart;
+
+  // ❗ nếu không đủ 240 phút → không reset
+  if (duration < 240 * 60 * 1000) return;
+
+  // ❗ chỉ reset nếu vừa hết trong 20 giây
+  if (elapsed >= 0 && elapsed <= 20000) {
+    return {
+      checked: true,
+      expireAt: now() + 240 * 60 * 1000,
+      sosStart: now(),
+      sosOff: false
+    };
+  }
+
+  return;
 });
 
 }, 1000);
@@ -676,6 +692,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
