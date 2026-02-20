@@ -396,14 +396,30 @@ cell.className = "timer red";
 // Tự reset sau 1 giây
  setTimeout(() => {
   const id = cell.id.replace("t_", "");
-  const newExpire = now() + 240 * 60 * 1000;
-  delete cell.dataset.done; 
-  db.ref("timers/" + id).set({
-  checked: true,
-  expireAt: newExpire,
-  sosStart: now(),   // bắt đầu lại thời gian SOS
-  sosOff: false      // bật lại SOS
-});
+  const expectedExpire = expire; // expire là giá trị client đang thấy
+
+  db.ref("timers/" + id).transaction(current => {
+
+    // 1) Không có dữ liệu → không reset
+    if (!current) return;
+
+    // 2) Timer đã bị xóa → không reset
+    if (!current.checked) return;
+
+    // 3) Nếu expireAt trên Firebase KHÔNG khớp expireAt client đang thấy
+    //    => dữ liệu đã bị refresh / lệch / lỗi → KHÔNG reset
+    if (current.expireAt !== expectedExpire) {
+      return; // từ chối reset
+    }
+
+    // 4) Mọi thứ hợp lệ → reset 240 phút
+    return {
+      checked: true,
+      expireAt: now() + 240 * 60 * 1000,
+      sosStart: now(),
+      sosOff: false
+    };
+  });
 
 }, 1000);
 
@@ -676,6 +692,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
