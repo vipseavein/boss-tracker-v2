@@ -376,7 +376,7 @@ function ensureGlobalTick() {
       }
 
       // ===== HẾT TIME → CHỈ HIỂN THỊ =====
-if (remain <= 0) {
+if (remain <= 0 && remain >= -20) {
 
   // phát âm thanh đúng 1 lần khi chạm 00:00
   if (!cell.dataset.done) {
@@ -388,6 +388,8 @@ if (remain <= 0) {
     } catch(e){}
   }
 
+
+  
   // trong lúc CHỜ firebase reset → chỉ HIỂN THỊ
   cell.textContent = "BOSS";
 cell.className = "timer red";
@@ -411,7 +413,11 @@ cell.className = "timer red";
 return;
 
 }
-
+if (remain < -20) {
+  cell.textContent = "BOSS";
+  cell.className = "timer red";
+  return;
+}
 
       if (remain > 0 && cell.dataset.resetDone) {
         delete cell.dataset.resetDone;
@@ -670,6 +676,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
