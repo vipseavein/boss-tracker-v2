@@ -456,7 +456,11 @@ function startTimer(id, expireAt, sosStart = null, sosOff = false) {
   const cb = document.getElementById(id);
   if (!cell || !cb) return;
 
-  cb.checked = true;
+  // CHỈ tick nếu dữ liệu từ Firebase là hợp lệ
+if (expireAt > now() - 10000) {  
+    cb.checked = true;
+}
+
   delete cell.dataset.done;
   cell.dataset.expire = expireAt;
   
@@ -666,6 +670,7 @@ db.ref("colors").on("child_removed", s => document.getElementById(s.key)?.classL
 
 </body>
 </html>
+
 
 
 
