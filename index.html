@@ -2,8 +2,6 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080d18">
   <title>Boss Tracker - Cabal Online Ultimate Combo (SEA)</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <style>
@@ -13,206 +11,74 @@
  * Unauthorized copying or modification is prohibited.
  */
     
-    :root {
-      color-scheme: dark;
-      --bg: #070b13;
-      --bg-2: #0b1220;
-      --panel: rgba(15, 24, 40, .88);
-      --panel-strong: #101a2c;
-      --panel-soft: rgba(255, 255, 255, .035);
-      --line: rgba(139, 177, 224, .13);
-      --line-strong: rgba(69, 161, 255, .32);
-      --text: #ecf4ff;
-      --muted: #8493a9;
-      --primary: #45a1ff;
-      --primary-2: #796cff;
-      --shadow: 0 24px 70px rgba(0, 0, 0, .34);
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
     body {
-      min-width: 320px;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 12% 0%, rgba(69, 161, 255, .13), transparent 30%),
-        radial-gradient(circle at 88% 8%, rgba(121, 108, 255, .12), transparent 28%),
-        linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 55%);
-      color: var(--text);
-      transition: background .25s ease, color .25s ease;
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      margin: 0; 
+      padding: 20px;
+      transition: 0.3s;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .2;
-      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 32px 32px;
-      mask-image: linear-gradient(to bottom, #000, transparent 70%);
+    h2 {
+      text-align: center;
+      color: #58a6ff;
+      text-shadow: 0 0 10px #58a6ff;
+      font-size: 28px;
+      margin-bottom: 20px;
+       margin: 0 0 20px 0;
     }
-
-    button, input { font: inherit; }
-
-    .app-shell {
-      position: relative;
-      width: min(1920px, 100%);
-      margin: 0 auto;
-      padding: 24px clamp(12px, 2vw, 32px) 40px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 18px;
-    }
-
-    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 48px;
-      height: 48px;
-      flex: 0 0 auto;
-      border: 1px solid rgba(120, 190, 255, .32);
-      border-radius: 15px;
-      background: linear-gradient(145deg, rgba(69,161,255,.22), rgba(121,108,255,.16));
-      box-shadow: inset 0 1px rgba(255,255,255,.14), 0 12px 30px rgba(35,118,255,.18);
-      color: #8dc8ff;
-    }
-    .brand-mark svg { width: 25px; height: 25px; }
-
-    h1 { margin: 0; font-size: clamp(20px, 2vw, 28px); line-height: 1.15; letter-spacing: -.035em; }
-    .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
-    .top-actions { display: flex; gap: 9px; flex: 0 0 auto; }
-    .action-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 40px;
-      padding: 0 14px;
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      background: rgba(255,255,255,.055);
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: none;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
-    }
-    .action-button:hover { transform: translateY(-1px); border-color: var(--line-strong); background: rgba(69,161,255,.1); }
-    .action-button svg { width: 17px; height: 17px; }
-
-    .dashboard-card {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: var(--shadow), inset 0 1px rgba(255,255,255,.035);
-      backdrop-filter: blur(16px);
-    }
-
-    .table-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: 58px;
-      padding: 10px 14px 10px 18px;
-      border-bottom: 1px solid var(--line);
-    }
-    .section-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 800; }
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #35df8d; box-shadow: 0 0 0 5px rgba(53,223,141,.1), 0 0 14px rgba(53,223,141,.5); }
-    .legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-    .legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
-    .legend-swatch { width: 8px; height: 8px; border-radius: 99px; }
-
-    .table-wrap { overflow: auto; max-height: calc(100vh - 210px); scrollbar-color: rgba(104,165,230,.5) transparent; scrollbar-width: thin; }
-    .table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
-    .table-wrap::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 99px; background: rgba(104,165,230,.45); background-clip: padding-box; }
 
     table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       table-layout: fixed;
-      min-width: 1480px;
-      background: transparent;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+      transition: 0.3s;
     }
 
     th, td {
-      height: 44px;
-      border: 0;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      padding: 5px 6px;
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      padding: 4px;
       text-align: center;
-      color: #cbd8e8;
+      color: #c9d1d9;
       white-space: nowrap;
-      transition: background .14s ease;
+      transition: 0.3s;
     }
 
     th.channel-col, td.channel-col {
-      width: 70px;
+      width: calc(100% / 26);
       white-space: nowrap;
     }
 
     th {
-      position: sticky;
-      top: 0;
-      z-index: 4;
-      height: 48px;
-      background: #111c2e;
-      color: #94caff;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .01em;
-      box-shadow: 0 1px 0 var(--line);
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      font-weight: bold;
+      text-shadow: 0 0 5px #58a6ff;
     }
-
-    th:first-child, td:first-child { position: sticky; left: 0; z-index: 3; }
-    th:first-child { z-index: 6; }
-    td:first-child { background: #101929 !important; color: #95a6bc; font-weight: 800; }
 
     #bossTable tr:nth-child(odd) {
-      background-color: rgba(255,255,255,.012) !important;
+      background-color: rgba(88, 166, 255, 0.05) !important;
     }
     #bossTable tr:nth-child(even) {
-      background-color: rgba(255,255,255,.027) !important;
+      background-color: rgba(88, 166, 255, 0.1) !important;
     }
 
     input[type="checkbox"] {
-      appearance: none;
-      width: 17px;
-      height: 17px;
-      margin: 0;
-      border: 1px solid #53647c;
-      border-radius: 5px;
-      background: #0b1321;
+      transform: scale(1.5);
       cursor: pointer;
+      accent-color: #58a6ff;
       vertical-align: middle;
-      transition: .16s ease;
-    }
-    input[type="checkbox"]:checked {
-      border-color: var(--primary);
-      background: var(--primary) center/11px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m2.2 6.2 2.3 2.3 5.3-5.3' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      box-shadow: 0 0 0 3px rgba(69,161,255,.12);
     }
 
     .right-clicked {
-      outline: 2px solid #ffd84b !important;
-      outline-offset: 2px;
-      box-shadow: 0 0 12px rgba(255,216,75,.6);
+      outline: 3px solid #ffeb3b !important;
+      box-shadow: 0 0 10px #ffeb3b;
+      border-radius: 4px;
     }
 
     @keyframes blinkYellow {
@@ -234,79 +100,68 @@
       font-weight: bold;
       text-shadow: 0 0 8px rgba(255,255,255,0.5);
       display: inline-block;
-      margin-left: 7px;
-      padding: 4px 7px;
-      border-radius: 7px;
-      min-width: 57px;
+      margin-left: 6px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      min-width: 50px;
       vertical-align: middle;
-      font-size: 12px;
-      letter-spacing: .02em;
     }
 
-    .blue { background: linear-gradient(135deg,#147dea,#3468ef) !important; color: white; }
-    .green { background: linear-gradient(135deg,#21c67a,#19ad70) !important; color: #041b11; }
-    .yellow { background: linear-gradient(135deg,#ffd24a,#f0b920) !important; color: #271b00; }
-    .red { background: linear-gradient(135deg,#ff4b63,#e9294c) !important; color: white; }
+    .blue { background-color: #0077ff !important; color: white; }
+    .green { background-color: #00cc44 !important; color: black; }
+    .yellow { background-color: #ffcc00 !important; color: black; }
+    .red { background-color: #ff0033 !important; color: white; }
 
     #notifications {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 16px;
+      margin-top: 25px;
+      text-align: center;
+      position: relative;
     }
 
     #notifications div {
-      width: auto;
-      margin: 0;
-      padding: 11px 12px;
-      border-radius: 11px;
-      font-size: 12px;
-      font-weight: 800;
-      box-shadow: inset 0 1px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.16);
+      width: 60%;
+      margin: 8px auto;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      color: black;
+      box-shadow: 0 0 10px rgba(255,255,255,0.3);
       position: relative;
     }
 
     .highlight-row td {
-      background-color: rgba(69,161,255,.07) !important;
+      background-color: rgba(255, 255, 255, 0.08) !important;
     }
     .highlight-col {
-      background-color: rgba(69,161,255,.08) !important;
+      background-color: rgba(255, 255, 255, 0.12) !important;
     }
 
     body.light {
-      color-scheme: light;
-      --bg: #eff4fa;
-      --bg-2: #f8fbff;
-      --panel: rgba(255,255,255,.9);
-      --panel-strong: #fff;
-      --panel-soft: rgba(23,67,112,.035);
-      --line: rgba(42,76,113,.12);
-      --line-strong: rgba(25,116,214,.32);
-      --text: #172335;
-      --muted: #65758a;
-      --shadow: 0 24px 60px rgba(36,67,104,.12);
+      background: #f2f2f2;
+      color: #222;
     }
 
     body.light table {
-      background: transparent;
-      box-shadow: none;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
     }
 
     body.light th {
-      background: #edf5ff;
-      color: #195b9f;
+      background: #d0e4ff;
+      color: #003366;
       text-shadow: none;
     }
 
     body.light td {
-      color: #34445a;
+      color: #222;
+      border-color: #aac4e6;
     }
 
     body.light #bossTable tr:nth-child(odd) {
-      background-color: rgba(247,251,255,.72) !important;
+      background-color: #f7fbff !important;
     }
     body.light #bossTable tr:nth-child(even) {
-      background-color: rgba(236,244,252,.68) !important;
+      background-color: #eaf4ff !important;
     }
 
     body.light .timer {
@@ -325,56 +180,59 @@
       background-color: rgba(0, 0, 0, 0.08) !important;
     }
 
+    #themeToggle {
+      padding: 6px 12px;
+      background: #58a6ff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(88,166,255,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 999;
+    }
+
+    body.light #themeToggle {
+      background: #003366;
+      color: white;
+    }
+
+    #logButton {
+      padding: 6px 12px;
+      background: #ff9800;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,152,0,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+      position: fixed;
+      right: 20px;
+      bottom: 60px;
+      z-index: 999;
+    }
+
+    body.light #logButton {
+      background: #cc7a00;
+    }
+
     #columnSelector {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
-      box-shadow: 0 12px 35px rgba(0,0,0,.12);
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(88,166,255,0.3);
     }
     #columnSelector label {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 34px;
-      padding: 0 10px;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: var(--panel-soft);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+      margin-right: 12px;
       cursor: pointer;
-    }
-    #columnSelector label:has(input:checked) { color: var(--text); border-color: rgba(69,161,255,.24); background: rgba(69,161,255,.08); }
-    #columnSelector input { width: 14px; height: 14px; }
-
-    body.light td:first-child { background: #f4f8fd !important; }
-    body.light .action-button { background: rgba(255,255,255,.72); }
-    body.light .brand-mark { color: #227bd0; }
-
-    @media (max-width: 900px) {
-      .app-shell { padding-top: 16px; }
-      .topbar { align-items: flex-start; }
-      .subtitle { display: none; }
-      .action-button span { display: none; }
-      .action-button { width: 40px; padding: 0; }
-      .table-toolbar { align-items: flex-start; flex-direction: column; }
-      .legend { justify-content: flex-start; }
-      #notifications { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .table-wrap { max-height: calc(100vh - 245px); }
-    }
-    @media (max-width: 520px) {
-      .brand-mark { width: 42px; height: 42px; border-radius: 13px; }
-      h1 { font-size: 18px; }
-      #notifications { grid-template-columns: 1fr; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
     }
   </style>
 
@@ -390,42 +248,13 @@
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
 
-<main class="app-shell">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.25 20 7.9v8.2L12 20.75 4 16.1V7.9L12 3.25Z" stroke="currentColor" stroke-width="1.6"/><path d="m8.3 13.1 2.25 2.25 5.25-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div>
-        <h1>Boss Tracker</h1>
-        <p class="subtitle">Cabal Ultimate Combo · SEA Server</p>
-      </div>
-    </div>
-    <div class="top-actions">
-      <button id="logButton" class="action-button" title="Xem lịch sử">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Lịch sử</span>
-      </button>
-      <button id="themeToggle" class="action-button" title="Đổi giao diện">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.3 15.5A8.5 8.5 0 1 1 8.5 3.7a7 7 0 0 0 11.8 11.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Light Mode</span>
-      </button>
-    </div>
-  </header>
+<h2>Boss Tracker - Cabal Ultimate Combo (SEA)</h2>
+<table id="bossTable"></table>
+<div id="notifications"></div>
 
-  <section class="dashboard-card">
-    <div class="table-toolbar">
-      <div class="section-title"><span class="live-dot"></span> Boss status · 30 Channels</div>
-      <div class="legend" aria-label="Chú thích trạng thái">
-        <span class="legend-item"><i class="legend-swatch blue"></i> Vừa hạ</span>
-        <span class="legend-item"><i class="legend-swatch green"></i> Đang chờ</span>
-        <span class="legend-item"><i class="legend-swatch yellow"></i> Sắp xuất hiện</span>
-        <span class="legend-item"><i class="legend-swatch red"></i> Đã xuất hiện</span>
-      </div>
-    </div>
-    <div class="table-wrap"><table id="bossTable"></table></div>
-  </section>
-  <div id="notifications" aria-live="polite"></div>
-  <div id="columnSelector" aria-label="Ẩn hoặc hiện boss"></div>
-</main>
+<button id="themeToggle">Light Mode</button>
+<button id="logButton">LOG</button>
+<div id="columnSelector"></div>
 
 <script>
 /* ====== PHẦN JS + TỐI ƯU NHẸ ====== */
@@ -434,9 +263,7 @@
 const themeToggle = document.getElementById("themeToggle");
 function applyTheme(mode) {
   document.body.classList.toggle("light", mode === "light");
-  const label = themeToggle.querySelector("span");
-  if (label) label.textContent = mode === "light" ? "Dark Mode" : "Light Mode";
-  themeToggle.setAttribute("aria-label", mode === "light" ? "Chuyển sang giao diện tối" : "Chuyển sang giao diện sáng");
+  themeToggle.textContent = mode === "light" ? "Dark Mode" : "Light Mode";
 }
 const savedTheme = localStorage.getItem("themeMode") || "dark";
 applyTheme(savedTheme);
