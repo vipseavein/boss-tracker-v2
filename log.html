@@ -101,6 +101,9 @@
       left: 20px;
       bottom: 20px;
       z-index: 999;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     #actions button {
@@ -109,11 +112,13 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      margin-right: 8px;
+      margin-right: 0;
     }
 
     #exportExcel { background: #28a745; color: white; }
     #clearLogs { background: #dc3545; color: white; }
+    #clearAllLogs { background: #9c2532; color: white; }
+    #resetAllCheckboxes { background: #6f42c1; color: white; }
 
     /* Back button bottom-right */
     #backButton {
@@ -190,6 +195,8 @@
   <div id="actions">
     <button id="exportExcel">Xuất Excel</button>
     <button id="clearLogs">Xóa log cũ hơn 5 tiếng</button>
+    <button id="clearAllLogs">Xóa toàn bộ lịch sử log</button>
+    <button id="resetAllCheckboxes">Reset toàn bộ checkbox</button>
   </div>
 
   <!-- BACK BUTTON BOTTOM-RIGHT -->
@@ -433,6 +440,44 @@ const firebaseConfig = {
         renderLogs();
         renderPagination();
       });
+    });
+
+    /* CLEAR ALL LOGS */
+    document.getElementById("clearAllLogs").addEventListener("click", async () => {
+      if (!confirm("Bạn có chắc muốn xóa TOÀN BỘ lịch sử log? Thao tác này không thể hoàn tác.")) return;
+
+      try {
+        await db.ref("logs").remove();
+        allLogs = [];
+        filteredLogs = [];
+        renderLogs();
+        renderPagination();
+        fillFilterOptions();
+        alert("Đã xóa toàn bộ lịch sử log!");
+      } catch (error) {
+        console.error("Clear all logs failed:", error);
+        alert("Không thể xóa lịch sử log. Vui lòng kiểm tra quyền Firebase.");
+      }
+    });
+
+    /* RESET ALL CHECKBOXES – confirmation code required */
+    document.getElementById("resetAllCheckboxes").addEventListener("click", async () => {
+      const code = prompt("Nhập mã xác nhận để reset toàn bộ checkbox:");
+      if (code === null) return;
+      if (code.trim() !== "OANG") {
+        alert("Mã xác nhận không chính xác!");
+        return;
+      }
+
+      if (!confirm("Mã hợp lệ. Bạn có chắc muốn reset toàn bộ checkbox trên tất cả channel?")) return;
+
+      try {
+        await db.ref("timers").remove();
+        alert("Đã reset toàn bộ checkbox!");
+      } catch (error) {
+        console.error("Reset all checkboxes failed:", error);
+        alert("Không thể reset checkbox. Vui lòng kiểm tra quyền Firebase.");
+      }
     });
 
     /* BACK BUTTON */
