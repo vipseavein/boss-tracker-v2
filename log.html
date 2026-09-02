@@ -12,6 +12,8 @@
       padding: 20px;
     }
 
+    body.auth-pending > * { visibility: hidden; }
+
     h2 {
       text-align: center;
       color: #58a6ff;
@@ -139,7 +141,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
-<body>
+<body class="auth-pending">
 
   <h2>Lịch sử thao tác Checkbox</h2>
 
@@ -159,6 +161,10 @@
       <option value="uncheck">✘ Tắt</option>
     </select>
 
+    <select id="filterUser">
+      <option value="">-- Người dùng --</option>
+    </select>
+
     <input type="date" id="filterDate">
   </div>
 
@@ -166,6 +172,7 @@
   <table id="logTable">
     <tr>
       <th>Thời gian</th>
+      <th>Người dùng</th>
       <th>Kênh</th>
       <th>Boss</th>
       <th>Hành động</th>
@@ -203,18 +210,19 @@ const firebaseConfig = {
    
 
     const db = firebase.database();
-firebase.auth().signInAnonymously()
-  .then(() => {
-    console.log("Anonymous login success (log page)");
-  })
-  .catch(error => {
-    console.error("Auth error:", error);
-  });
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user || user.isAnonymous) {
+        location.replace("login.html");
+        return;
+      }
+      document.body.classList.remove("auth-pending");
+    });
 
     const logTable = document.getElementById("logTable");
     const filterChannel = document.getElementById("filterChannel");
     const filterBoss = document.getElementById("filterBoss");
     const filterAction = document.getElementById("filterAction");
+    const filterUser = document.getElementById("filterUser");
     const filterDate = document.getElementById("filterDate");
 
     let allLogs = [];
@@ -247,6 +255,7 @@ firebase.auth().signInAnonymously()
         if (filterChannel.value && filterChannel.value !== ch) return false;
         if (filterBoss.value && filterBoss.value !== boss) return false;
         if (filterAction.value && filterAction.value !== log.action) return false;
+        if (filterUser.value && filterUser.value !== getUserLabel(log)) return false;
 
         if (filterDate.value) {
           const d = new Date(log.time);
@@ -268,12 +277,14 @@ firebase.auth().signInAnonymously()
     function fillFilterOptions() {
       const channels = new Set();
       const bosses = new Set();
+      const users = new Set();
 
       allLogs.forEach(log => {
         const parts = log.id.split("_");
         if (parts.length < 2) return;
         channels.add(parts[0]);
         bosses.add(parts.slice(1).join("_"));
+        users.add(getUserLabel(log));
       });
 
       filterChannel.innerHTML = `<option value="">-- Lọc theo kênh --</option>`;
@@ -281,12 +292,33 @@ firebase.auth().signInAnonymously()
 
       filterBoss.innerHTML = `<option value="">-- Lọc theo boss --</option>`;
       bosses.forEach(b => filterBoss.innerHTML += `<option value="${b}">${b}</option>`);
+
+      const selectedUser = filterUser.value;
+      filterUser.innerHTML = `<option value="">-- Người dùng --</option>`;
+      [...users].sort().forEach(user => {
+        const option = document.createElement("option");
+        option.value = user;
+        option.textContent = user;
+        filterUser.appendChild(option);
+      });
+      filterUser.value = selectedUser;
+    }
+
+    function getUserLabel(log) {
+      return log.userName || log.userEmail || (log.userUid ? `UID: ${log.userUid}` : "Unknown");
+    }
+
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = String(value ?? "");
+      return div.innerHTML;
     }
 
     function renderLogs() {
       logTable.innerHTML = `
         <tr>
           <th>Thời gian</th>
+          <th>Người dùng</th>
           <th>Kênh</th>
           <th>Boss</th>
           <th>Hành động</th>
@@ -307,8 +339,9 @@ firebase.auth().signInAnonymously()
         logTable.insertAdjacentHTML("beforeend", `
           <tr>
             <td>${timeStr}</td>
-            <td>${ch}</td>
-            <td>${boss}</td>
+            <td>${escapeHtml(getUserLabel(log))}</td>
+            <td>${escapeHtml(ch)}</td>
+            <td>${escapeHtml(boss)}</td>
             <td class="${log.action}">
               ${log.action === "check" ? "✔ Bật" : "✘ Tắt"}
             </td>
@@ -342,6 +375,7 @@ firebase.auth().signInAnonymously()
     filterChannel.onchange =
     filterBoss.onchange =
     filterAction.onchange =
+    filterUser.onchange =
     filterDate.onchange = applyFilters;
 
     /* EXPORT EXCEL */
@@ -359,6 +393,7 @@ firebase.auth().signInAnonymously()
 
         return {
           "Thời gian": time.toLocaleString("vi-VN"),
+          "Người dùng": getUserLabel(log),
           "Kênh": ch,
           "Boss": boss,
           "Hành động": log.action === "check" ? "Bật" : "Tắt"

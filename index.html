@@ -307,13 +307,23 @@ firebase.initializeApp({
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
 });
 const db = firebase.database();
+let currentUser = null;
 firebase.auth().onAuthStateChanged(user => {
   if (!user || user.isAnonymous) {
     location.replace("login.html");
     return;
   }
+  currentUser = user;
   document.body.classList.remove("auth-pending");
 });
+
+function getLogUser() {
+  return {
+    userUid: currentUser ? currentUser.uid : "",
+    userEmail: currentUser && currentUser.email ? currentUser.email : "Unknown",
+    userName: currentUser && currentUser.displayName ? currentUser.displayName : ""
+  };
+}
 
 
 
@@ -634,7 +644,8 @@ bosses.forEach(b => {
   db.ref("logs").push({
     id: id,
     time: now(),
-    action: "check"
+    action: "check",
+    ...getLogUser()
   });
 }
       else {
@@ -660,7 +671,8 @@ bosses.forEach(b => {
         db.ref("logs").push({
           id: id,
           time: now(),
-          action: "uncheck"
+          action: "uncheck",
+          ...getLogUser()
         });
       }
     };
