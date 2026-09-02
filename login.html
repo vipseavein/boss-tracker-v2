@@ -174,7 +174,7 @@
     };
 
     auth.onAuthStateChanged(user => {
-      if (user && !user.isAnonymous) location.replace("index(1).html");
+      if (user && !user.isAnonymous) location.replace("index.html");
     });
 
     passwordToggle.addEventListener("click", () => {
@@ -190,7 +190,7 @@
       submitButton.textContent = "Đang đăng nhập...";
       try {
         await auth.signInWithEmailAndPassword(email.value.trim(), password.value);
-        location.replace("index(1).html");
+        location.replace("index.html");
       } catch (error) {
         errorMessage.textContent = errorText[error.code] || "Đăng nhập thất bại. Vui lòng thử lại.";
         errorMessage.classList.add("show");
