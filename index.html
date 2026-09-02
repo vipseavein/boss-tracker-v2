@@ -28,8 +28,24 @@
       text-shadow: 0 0 10px #58a6ff;
       font-size: 28px;
       margin-bottom: 20px;
-       margin: 0 0 20px 0;
+       margin: 0 0 5px 0;
     }
+
+    #userGreeting {
+      margin: 0 0 18px;
+      color: #9fb0c3;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    #userGreeting strong {
+      color: #7dc0ff;
+      font-weight: 800;
+    }
+
+    body.light #userGreeting { color: #53657a; }
+    body.light #userGreeting strong { color: #075cae; }
 
     table {
       width: 100%;
@@ -270,6 +286,7 @@
 </audio>
 
 <h2>Boss Tracker - Cabal Ultimate Combo (SEA)</h2>
+<p id="userGreeting" aria-live="polite"></p>
 <table id="bossTable"></table>
 <div id="notifications"></div>
 
@@ -314,6 +331,12 @@ firebase.auth().onAuthStateChanged(user => {
     return;
   }
   currentUser = user;
+  const displayName = user.displayName || (user.email ? user.email.split("@")[0] : "User");
+  const greeting = document.getElementById("userGreeting");
+  greeting.textContent = "Xin chào “";
+  const name = document.createElement("strong");
+  name.textContent = displayName;
+  greeting.append(name, "”");
   document.body.classList.remove("auth-pending");
 });
 
