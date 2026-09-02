@@ -20,6 +20,8 @@
       transition: 0.3s;
     }
 
+    body.auth-pending > * { visibility: hidden; }
+
     h2 {
       text-align: center;
       color: #58a6ff;
@@ -219,6 +221,25 @@
       z-index: 999;
     }
 
+    #logoutButton {
+      padding: 6px 12px;
+      background: #dc3545;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(220,53,69,0.4);
+      transition: 0.3s;
+      font-size: 13px;
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      z-index: 999;
+    }
+
+    #logoutButton:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
     body.light #logButton {
       background: #cc7a00;
     }
@@ -242,7 +263,7 @@
 
 </head>
 
-<body>
+<body class="auth-pending">
 
 <audio id="alertSound">
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
@@ -254,6 +275,7 @@
 
 <button id="themeToggle">Light Mode</button>
 <button id="logButton">LOG</button>
+<button id="logoutButton">LOG OUT</button>
 <div id="columnSelector"></div>
 
 <script>
@@ -273,20 +295,25 @@ themeToggle.onclick = () => {
   localStorage.setItem("themeMode", m);
 };
 document.getElementById("logButton").onclick = () => location.href = "log.html";
+document.getElementById("logoutButton").onclick = () => {
+  firebase.auth().signOut().then(() => location.replace("login.html"));
+};
 
 /* ---------- FIREBASE ---------- */
 firebase.initializeApp({
   apiKey: "AIzaSyCjnE-pTZymLmDafzfBwMOZu9lG8VYFNJA",
+  authDomain: "boss-tracker-v2.firebaseapp.com",
+  projectId: "boss-tracker-v2",
   databaseURL: "https://boss-tracker-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
 });
 const db = firebase.database();
-firebase.auth().signInAnonymously()
-  .then(function() {
-    console.log("Anonymous login success");
-  })
-  .catch(function(error) {
-    console.error("Auth error:", error);
-  });
+firebase.auth().onAuthStateChanged(user => {
+  if (!user || user.isAnonymous) {
+    location.replace("login.html");
+    return;
+  }
+  document.body.classList.remove("auth-pending");
+});
 
 
 
